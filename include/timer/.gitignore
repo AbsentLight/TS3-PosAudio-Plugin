@@ -30,11 +30,3 @@
 *.exe
 *.out
 *.app
-.vs/CPP-PAR/v16/ipch/AutoPCH/d8d6690461af399/PLUGIN.ipch
-.vs/CPP-PAR/v16/.suo
-.vs/CPP-PAR/v16/Browse.VC.db
-.vs/CPP-PAR/v16/ipch/AutoPCH/34cdbb526b53e552/TIMERCPP.ipch
-.vs/CPP-PAR/v16/ipch/AutoPCH/6e6466f57f734889/PLUGIN.ipch
-
-Debug/
-x64/
