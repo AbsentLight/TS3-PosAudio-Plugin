@@ -818,12 +818,19 @@ void ts3plugin_onCustom3dRolloffCalculationClientEvent(uint64 serverConnectionHa
 	strvolume = strvolume.append(std::to_string(*volume));
 	//printf(strvolume.c_str());
 
-	if (distance < 20.0f) {
+	float a = 20.0f;
+	float b = 60.0f;
+	float c = 0.2f;
+
+	if (distance < a) {
 		*volume = 1.0f;
 	}
 	else {
-		//float v = 1.0f - 0.01f * (distance-20.0f);
-		float v = 1.0f - pow(((distance - 20.0f)/100.0f),0.2f);
+		//Insert in to Desmos: C:Steepness 0.1-1 step:0.1 B:Max range A-inf A:Offset 0-inf
+		//1-\left(\frac{\left(\operatorname{abs}\left(x\right)-a\right)}{b-a}\right)^{c}\left\{\operatorname{abs}\left(x\right)>a\right\}
+		//y=1\left\{\operatorname{abs}\left(x\right)<a\right\}
+
+		float v = 1.0f - pow(((distance - a)/(b-a)),c);
 		if (v < 0.0f) {
 			v = 0.0f;
 		}
