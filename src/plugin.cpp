@@ -143,8 +143,9 @@ int ts3plugin_init() {
     ts3Functions.getConfigPath(configPath, PATH_BUFSIZE);
 	ts3Functions.getPluginPath(pluginPath, PATH_BUFSIZE, pluginID);
 
-	SetDllDirectoryA(std::string(pluginPath).append("\\CPP-PAR\\").c_str());
-	LoadLibraryA(std::string(pluginPath).append("\\CPP-PAR\\cpprest_2_10d.dll").c_str());
+	//These probably aren't required anymore...
+	//SetDllDirectoryA(std::string(pluginPath).append("\\CPP-PAR\\").c_str());
+	//LoadLibraryA(std::string(pluginPath).append("\\CPP-PAR\\cpprest_2_10d.dll").c_str());
 
 	printf("PLUGIN: App path: %s\nResources path: %s\nConfig path: %s\nPlugin path: %s\n", appPath, resourcesPath, configPath, pluginPath);
 
@@ -182,10 +183,8 @@ void update3dposition(uint64 serverConnectionHandlerID) {
 		enabled = false;
 	}
 
-	printf("3D Sound check\n");
-
 	// Create http_client to send the request.
-	web::http::client::http_client client(U("http://192.168.2.58:9000/request"));
+	web::http::client::http_client client(U("http://wolfz.uk:9000/request"));
 	
 	anyID id = NULL;
 	ts3Functions.getClientID(serverConnectionHandlerID, &id);
@@ -209,6 +208,12 @@ void update3dposition(uint64 serverConnectionHandlerID) {
 		enabled = false;
 	}
 
+	if (enabled) {
+		return;
+	}
+
+	printf("3D Sound check\n");
+
 	char* meclientUID = NULL;
 	ts3Functions.getClientVariableAsString(serverConnectionHandlerID, id, CLIENT_UNIQUE_IDENTIFIER, &meclientUID);
 	if (meclientUID == NULL) {
@@ -216,87 +221,91 @@ void update3dposition(uint64 serverConnectionHandlerID) {
 	}
 	std::string meclientUIDstr(meclientUID);
 	
-	// Build request URI and start the request.
-	uri_builder builder(U("/"));
-	builder.append_query(U("id"), conversions::to_string_t(meclientUIDstr)); //May turn the pointer to a string not the ID.... std::to_string(*id)
-	http_response response = client.request(methods::GET, builder.to_string()).get();
+	try {
+		// Build request URI and start the request.
+		uri_builder builder(U("/"));
+		builder.append_query(U("id"), conversions::to_string_t(meclientUIDstr)); //May turn the pointer to a string not the ID.... std::to_string(*id)
+		http_response response = client.request(methods::GET, builder.to_string()).get();
+
+		//Parse network response
+		json::object jsonVal = response.extract_json().get().as_object(); 
+
+		anyID *clientidlist = NULL;
+		ts3Functions.getChannelClientList(serverConnectionHandlerID, channelID, &clientidlist);
+		if (clientidlist == NULL) {
+			return;
+		}
+
+		TS3_VECTOR center;
+		center.x = 0.0f;
+		center.y = 0.0f;
+		center.z = 0.0f;
 	
-	//Parse network response
-	json::object jsonVal = response.extract_json().get().as_object(); 
+		TS3_VECTOR forward;
+		forward.x = 0.0f;
+		forward.y = 1.0f;
+		forward.z = 1.0f;
 
-	anyID *clientidlist = NULL;
-	ts3Functions.getChannelClientList(serverConnectionHandlerID, channelID, &clientidlist);
-	if (clientidlist == NULL) {
-		return;
-	}
+		TS3_VECTOR up;
+		up.x = 0.0f;
+		up.y = 1.5f;
+		up.z = 0.0f;
 
-	TS3_VECTOR center;
-	center.x = 0.0f;
-	center.y = 0.0f;
-	center.z = 0.0f;
-	
-	TS3_VECTOR forward;
-	forward.x = 0.0f;
-	forward.y = 1.0f;
-	forward.z = 1.0f;
+		ts3Functions.systemset3DSettings(serverConnectionHandlerID, 1.0f, 1.0f);
+		ts3Functions.systemset3DListenerAttributes(serverConnectionHandlerID, &center,&forward,&up);
 
-	TS3_VECTOR up;
-	up.x = 0.0f;
-	up.y = 1.5f;
-	up.z = 0.0f;
-
-	ts3Functions.systemset3DSettings(serverConnectionHandlerID, 1.0f, 1.0f);
-	ts3Functions.systemset3DListenerAttributes(serverConnectionHandlerID, &center,&forward,&up);
-
-	//While clientidlist[i] not null
-	for (int i = 0; clientidlist[i]; ++i) {
-		//Set cross matched users 3D positions
+		//While clientidlist[i] not null
+		for (int i = 0; clientidlist[i]; ++i) {
+			//Set cross matched users 3D positions
 		
-		if (jsonVal[conversions::to_string_t(std::to_string(clientidlist[i]))] != NULL) {
-		//if (jsonVal[conversions::to_string_t(std::to_string(clientidlist[i]))] != NULL) {
+			if (jsonVal[conversions::to_string_t(std::to_string(clientidlist[i]))] != NULL) {
+			//if (jsonVal[conversions::to_string_t(std::to_string(clientidlist[i]))] != NULL) {
 			
-			//string_t clientid = conversions::to_string_t(std::to_string(clientidlist[i]));
+				//string_t clientid = conversions::to_string_t(std::to_string(clientidlist[i]));
 			
-			char* clientUID = NULL;
-			ts3Functions.getClientVariableAsString(serverConnectionHandlerID, clientidlist[i], CLIENT_UNIQUE_IDENTIFIER, &clientUID);
-			if (clientUID == NULL) {
-				return;
-			}
+				char* clientUID = NULL;
+				ts3Functions.getClientVariableAsString(serverConnectionHandlerID, clientidlist[i], CLIENT_UNIQUE_IDENTIFIER, &clientUID);
+				if (clientUID == NULL) {
+					return;
+				}
 
-			std::string clientstr(clientUID);
-			string_t clientid = conversions::to_string_t(clientstr);
+				std::string clientstr(clientUID);
+				string_t clientid = conversions::to_string_t(clientstr);
 
-			if (jsonVal[clientid].is_array() && meclientUIDstr != clientstr) {
-				json::array posArray = jsonVal[clientid].as_array();
-				printf("I'm a real array\n");
-				TS3_VECTOR position;
-				if (enabled) {
-					position.x = posArray[0].as_double();
-					position.y = posArray[1].as_double();
-					position.z = posArray[2].as_double();
+				if (jsonVal[clientid].is_array() && meclientUIDstr != clientstr) {
+					json::array posArray = jsonVal[clientid].as_array();
+					TS3_VECTOR position;
+					if (enabled) {
+						position.x = posArray[0].as_double();
+						position.y = posArray[1].as_double();
+						position.z = posArray[2].as_double();
+					}
+					else {
+						position.x = 0;
+						position.y = 0;
+						position.z = 0;
+					}
+
+					ts3Functions.channelset3DAttributes(serverConnectionHandlerID, clientidlist[i], &position);
+
+					//free(&posArray);
+					//free(&forward);
+					//free(&up);
 				}
 				else {
-					position.x = 0;
-					position.y = 0;
-					position.z = 0;
+					//Player probably isn't registered.
 				}
 
-				ts3Functions.channelset3DAttributes(serverConnectionHandlerID, clientidlist[i], &position);
-
-				//free(&posArray);
-				//free(&forward);
-				//free(&up);
+				//free(&clientstr);
+				//free(&clientid);
+				//ts3Functions.freeMemory(clientUID);
 			}
-			else {
-				printf(clientstr.c_str());
-				printf("\nStill not an array...\n");
-			}
-
-			//free(&clientstr);
-			//free(&clientid);
-			//ts3Functions.freeMemory(clientUID);
-		}
 		
+		}
+
+	}
+	catch (const std::exception& e) {
+
 	}
 	
 	//free(&client);
