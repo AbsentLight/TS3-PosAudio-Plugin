@@ -15,7 +15,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\teamlog\logtypes.h">
+    <ClInclude Include="src\plugin.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\timer\timercpp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\teamspeak\clientlib_publicdefinitions.h">
@@ -33,16 +36,13 @@
     <ClInclude Include="include\teamspeak\public_rare_definitions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\plugin_definitions.h">
+    <ClInclude Include="include\teamlog\logtypes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\ts3_functions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\plugin.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\timer\timercpp.h">
+    <ClInclude Include="include\plugin_definitions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
