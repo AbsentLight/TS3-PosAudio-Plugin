@@ -208,52 +208,11 @@ void update3dposition(uint64 serverConnectionHandlerID) {
 		enabled = false;
 	}
 
-	anyID* clientidlist = NULL;
-	ts3Functions.getChannelClientList(serverConnectionHandlerID, channelID, &clientidlist);
-	if (clientidlist == NULL) {
+	if (enabled) {
 		return;
 	}
 
-	TS3_VECTOR center;
-	center.x = 0.0f;
-	center.y = 0.0f;
-	center.z = 0.0f;
-
-	TS3_VECTOR forward;
-	forward.x = 0.0f;
-	forward.y = 1.0f;
-	forward.z = 1.0f;
-
-	TS3_VECTOR up;
-	up.x = 0.0f;
-	up.y = 1.5f;
-	up.z = 0.0f;
-
-	ts3Functions.systemset3DSettings(serverConnectionHandlerID, 1.0f, 1.0f);
-	ts3Functions.systemset3DListenerAttributes(serverConnectionHandlerID, &center, &forward, &up);
-
-	if (!enabled) {
-		//While clientidlist[i] not null
-		for (int i = 0; clientidlist[i]; ++i) {
-			char* clientUID = NULL;
-			ts3Functions.getClientVariableAsString(serverConnectionHandlerID, clientidlist[i], CLIENT_UNIQUE_IDENTIFIER, &clientUID);
-			if (clientUID == NULL) {
-				return;
-			}
-
-			std::string clientstr(clientUID);
-			string_t clientid = conversions::to_string_t(clientstr);
-
-			TS3_VECTOR position;
-
-			position.x = 0.0f;
-			position.y = 0.0f;
-			position.z = 0.0f;
-			ts3Functions.channelset3DAttributes(serverConnectionHandlerID, clientidlist[i], &position);
-		}
-		printf("POS Audio Disabled\n");
-		return;
-	}
+	printf("3D Sound check\n");
 
 	char* meclientUID = NULL;
 	ts3Functions.getClientVariableAsString(serverConnectionHandlerID, id, CLIENT_UNIQUE_IDENTIFIER, &meclientUID);
@@ -271,11 +230,38 @@ void update3dposition(uint64 serverConnectionHandlerID) {
 		//Parse network response
 		json::object jsonVal = response.extract_json().get().as_object(); 
 
+		anyID *clientidlist = NULL;
+		ts3Functions.getChannelClientList(serverConnectionHandlerID, channelID, &clientidlist);
+		if (clientidlist == NULL) {
+			return;
+		}
+
+		TS3_VECTOR center;
+		center.x = 0.0f;
+		center.y = 0.0f;
+		center.z = 0.0f;
+	
+		TS3_VECTOR forward;
+		forward.x = 0.0f;
+		forward.y = 1.0f;
+		forward.z = 1.0f;
+
+		TS3_VECTOR up;
+		up.x = 0.0f;
+		up.y = 1.5f;
+		up.z = 0.0f;
+
+		ts3Functions.systemset3DSettings(serverConnectionHandlerID, 1.0f, 1.0f);
+		ts3Functions.systemset3DListenerAttributes(serverConnectionHandlerID, &center,&forward,&up);
+
 		//While clientidlist[i] not null
 		for (int i = 0; clientidlist[i]; ++i) {
-
 			//Set cross matched users 3D positions
+		
 			if (jsonVal[conversions::to_string_t(std::to_string(clientidlist[i]))] != NULL) {
+			//if (jsonVal[conversions::to_string_t(std::to_string(clientidlist[i]))] != NULL) {
+			
+				//string_t clientid = conversions::to_string_t(std::to_string(clientidlist[i]));
 			
 				char* clientUID = NULL;
 				ts3Functions.getClientVariableAsString(serverConnectionHandlerID, clientidlist[i], CLIENT_UNIQUE_IDENTIFIER, &clientUID);
@@ -289,11 +275,16 @@ void update3dposition(uint64 serverConnectionHandlerID) {
 				if (jsonVal[clientid].is_array() && meclientUIDstr != clientstr) {
 					json::array posArray = jsonVal[clientid].as_array();
 					TS3_VECTOR position;
-
-					printf("Setting position for %s to %f, %f, %f\n", clientstr.c_str(), posArray[0].as_double(), posArray[1].as_double(), posArray[2].as_double());
-					position.x = posArray[0].as_double();
-					position.y = posArray[1].as_double();
-					position.z = posArray[2].as_double();
+					if (enabled) {
+						position.x = posArray[0].as_double();
+						position.y = posArray[1].as_double();
+						position.z = posArray[2].as_double();
+					}
+					else {
+						position.x = 0;
+						position.y = 0;
+						position.z = 0;
+					}
 
 					ts3Functions.channelset3DAttributes(serverConnectionHandlerID, clientidlist[i], &position);
 
@@ -302,27 +293,19 @@ void update3dposition(uint64 serverConnectionHandlerID) {
 					//free(&up);
 				}
 				else {
-					if (!jsonVal[clientid].is_array() && meclientUIDstr != clientstr) {
-						//Player probably isn't registered.
-						printf("Player likely not registered. with id = %s\n", clientstr.c_str());
-					}
-					else if (meclientUIDstr == clientstr) {
-						//TS user is player
-					}
+					//Player probably isn't registered.
 				}
 
 				//free(&clientstr);
 				//free(&clientid);
 				//ts3Functions.freeMemory(clientUID);
-
-				printf("\n");
 			}
 		
 		}
 
 	}
 	catch (const std::exception& e) {
-		printf("An error occured or the connection timed out\n");
+
 	}
 	
 	//free(&client);
@@ -691,7 +674,7 @@ void ts3plugin_onUpdateClientEvent(uint64 serverConnectionHandlerID, anyID clien
 void ts3plugin_onClientMoveEvent(uint64 serverConnectionHandlerID, anyID clientID, uint64 oldChannelID, uint64 newChannelID, int visibility, const char* moveMessage) {
 	//update3dposition(serverConnectionHandlerID);
 	t.stop();
-	t.setInterval(&update3dposition, serverConnectionHandlerID, 1000/10);
+	t.setInterval(&update3dposition, serverConnectionHandlerID, 1000/20);
 }
 
 void ts3plugin_onClientMoveSubscriptionEvent(uint64 serverConnectionHandlerID, anyID clientID, uint64 oldChannelID, uint64 newChannelID, int visibility) {
@@ -822,8 +805,7 @@ void ts3plugin_onCustom3dRolloffCalculationClientEvent(uint64 serverConnectionHa
 		*volume = 1.0f;
 	}
 	else {
-		//float v = 1.0f - 0.01f * (distance-20.0f);
-		float v = 1.0f - pow(((distance - 20.0f)/100.0f),0.2f);
+		float v = 1.0f - 0.01f * (distance-20.0f);
 		if (v < 0.0f) {
 			v = 0.0f;
 		}
