@@ -15,10 +15,10 @@
 #include <string>
 #include <assert.h>
 #include <map>
-#include <cpprest/http_client.h>
-#include <cpprest/json.h>
-#include <cpprest/uri.h>
-#include <cpprest/uri_builder.h>
+#include "cpprest/http_client.h"
+#include "cpprest/json.h"
+#include "cpprest/uri.h"
+#include "cpprest/uri_builder.h"
 #include "teamspeak/public_errors.h"
 #include "teamspeak/public_errors_rare.h"
 #include "teamspeak/public_definitions.h"
