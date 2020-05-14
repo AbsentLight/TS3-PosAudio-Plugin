@@ -15,10 +15,10 @@
 #include <string>
 #include <assert.h>
 #include <map>
-#include "cpprest/http_client.h"
-#include "cpprest/json.h"
-#include "cpprest/uri.h"
-#include "cpprest/uri_builder.h"
+#include <cpprest/http_client.h>
+#include <cpprest/json.h>
+#include <cpprest/uri.h>
+#include <cpprest/uri_builder.h>
 #include "teamspeak/public_errors.h"
 #include "teamspeak/public_errors_rare.h"
 #include "teamspeak/public_definitions.h"
@@ -796,7 +796,7 @@ void ts3plugin_onCustom3dRolloffCalculationClientEvent(uint64 serverConnectionHa
 		*volume = 1.0f;
 	}
 	else {
-		float v = 1.0f - 0.01 * (distance-20.0f);
+		float v = 1.0f - 0.01f * (distance-20.0f);
 		if (v < 0.0f) {
 			v = 0.0f;
 		}

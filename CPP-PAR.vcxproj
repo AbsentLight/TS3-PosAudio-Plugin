@@ -108,7 +108,7 @@
       <DelayLoadDLLs>%(DelayLoadDLLs)</DelayLoadDLLs>
     </Link>
     <PostBuildEvent>
-      <Command>copy /y C:\Users\jonat\CPP-PAR\x64\Debug\CPP-PAR.dll C:\Users\jonat\AppData\Roaming\TS3Client\plugins\CPP-PAR.dll &amp;&amp; "C:\Program Files\TeamSpeak 3 Client\ts3client_win64.exe"</Command>
+      <Command>copy /y $(ProjectDir)\x64\Debug\CPP-PAR.dll C:\Users\jonat\AppData\Roaming\TS3Client\plugins\CPP-PAR.dll &amp;&amp; "C:\Program Files\TeamSpeak 3 Client\ts3client_win64.exe"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -144,47 +144,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="include\cpprest\astreambuf.h" />
-    <ClInclude Include="include\cpprest\asyncrt_utils.h" />
-    <ClInclude Include="include\cpprest\base_uri.h" />
-    <ClInclude Include="include\cpprest\containerstream.h" />
-    <ClInclude Include="include\cpprest\details\basic_types.h" />
-    <ClInclude Include="include\cpprest\details\cpprest_compat.h" />
-    <ClInclude Include="include\cpprest\details\fileio.h" />
-    <ClInclude Include="include\cpprest\details\http_helpers.h" />
-    <ClInclude Include="include\cpprest\details\http_server.h" />
-    <ClInclude Include="include\cpprest\details\http_server_api.h" />
-    <ClInclude Include="include\cpprest\details\nosal.h" />
-    <ClInclude Include="include\cpprest\details\resource.h" />
-    <ClInclude Include="include\cpprest\details\SafeInt3.hpp" />
-    <ClInclude Include="include\cpprest\details\web_utilities.h" />
-    <ClInclude Include="include\cpprest\filestream.h" />
-    <ClInclude Include="include\cpprest\http_client.h" />
-    <ClInclude Include="include\cpprest\http_compression.h" />
-    <ClInclude Include="include\cpprest\http_headers.h" />
-    <ClInclude Include="include\cpprest\http_listener.h" />
-    <ClInclude Include="include\cpprest\http_msg.h" />
-    <ClInclude Include="include\cpprest\interopstream.h" />
-    <ClInclude Include="include\cpprest\json.h" />
-    <ClInclude Include="include\cpprest\oauth1.h" />
-    <ClInclude Include="include\cpprest\oauth2.h" />
-    <ClInclude Include="include\cpprest\producerconsumerstream.h" />
-    <ClInclude Include="include\cpprest\rawptrstream.h" />
-    <ClInclude Include="include\cpprest\streams.h" />
-    <ClInclude Include="include\cpprest\uri.h" />
-    <ClInclude Include="include\cpprest\uri_builder.h" />
-    <ClInclude Include="include\cpprest\version.h" />
-    <ClInclude Include="include\cpprest\ws_client.h" />
-    <ClInclude Include="include\cpprest\ws_msg.h" />
     <ClInclude Include="include\plugin_definitions.h" />
-    <ClInclude Include="include\pplx\pplx.h" />
-    <ClInclude Include="include\pplx\pplxcancellation_token.h" />
-    <ClInclude Include="include\pplx\pplxconv.h" />
-    <ClInclude Include="include\pplx\pplxinterface.h" />
-    <ClInclude Include="include\pplx\pplxlinux.h" />
-    <ClInclude Include="include\pplx\pplxtasks.h" />
-    <ClInclude Include="include\pplx\pplxwin.h" />
-    <ClInclude Include="include\pplx\threadpool.h" />
     <ClInclude Include="include\teamlog\logtypes.h" />
     <ClInclude Include="include\teamspeak\clientlib_publicdefinitions.h" />
     <ClInclude Include="include\teamspeak\public_definitions.h" />
