@@ -15,10 +15,11 @@
 #include <string>
 #include <assert.h>
 #include <map>
-#include <cpprest/http_client.h>
-#include <cpprest/json.h>
-#include <cpprest/uri.h>
-#include <cpprest/uri_builder.h>
+#include "cpprest/http_client.h"
+#include "cpprest/json.h"
+#include "cpprest/uri.h"
+#include "cpprest/uri_builder.h"
+#include "cpprest\producerconsumerstream.h"
 #include "teamspeak/public_errors.h"
 #include "teamspeak/public_errors_rare.h"
 #include "teamspeak/public_definitions.h"
@@ -27,7 +28,6 @@
 #include "ts3_functions.h"
 #include "timercpp.h"
 #include "plugin.hpp"
-#include <cpprest\producerconsumerstream.h>
 
 using namespace utility;                    // Common utilities like string conversions
 using namespace web;                        // Common features like URIs.
