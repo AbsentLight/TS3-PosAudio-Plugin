@@ -9,8 +9,6 @@
 #include <Windows.h>
 #endif
 
-
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -60,18 +58,6 @@ static char* pluginID = NULL;
 
 bool globallyEnabled = true;
 std::map<uint64, bool> channelEnableMap;
-
-float RolloffOffset = 20.0f;
-float RolloffCutoff = 60.0f;
-float RolloffAttenuationCoefficient = 0.2f;
-
-std::wstring ServerAddress = L"www.wolfz.uk";
-std::wstring ServerPort = L"9000";
-
-bool Configured = false;
-
-#include "config.h"
-config* pConf = nullptr;
 
 #ifdef _WIN32
 /* Helper function to convert wchar_T to Utf-8 encoded strings on Windows */
@@ -171,20 +157,6 @@ int ts3plugin_init() {
 	 * For normal case, if a plugin really failed to load because of an error, the correct return value is 1. */
 }
 
-void updateFromRemoteConfiguration() {
-	std::wstring concatStr = (L"http://" + ServerAddress + L":" + ServerPort + L"/config");
-	web::http::client::http_client client(concatStr);
-	uri_builder builder(U("/"));
-	http_response response = client.request(methods::GET, builder.to_string()).get();
-
-	//Parse network response
-	json::object jsonVal = response.extract_json().get().as_object();
-
-	RolloffCutoff = jsonVal[L"cutoffDistance"].as_double();
-	RolloffAttenuationCoefficient = jsonVal[L"dropOffGradientCoefficient"].as_double();
-	RolloffOffset = jsonVal[L"safeZoneSize"].as_double();
-}
-
 /* Custom code called right before the plugin is unloaded */
 void ts3plugin_shutdown() {
     /* Your plugin cleanup code here */
@@ -195,12 +167,6 @@ void ts3plugin_shutdown() {
 	 * If your plugin implements a settings dialog, it must be closed and deleted here, else the
 	 * TeamSpeak client will most likely crash (DLL removed but dialog from DLL code still open).
 	 */
-
-	if (pConf) {
-		pConf->close();
-		delete pConf;
-		pConf = nullptr;
-	}
 
 	/* Free pluginID if we registered it */
 	if(pluginID) {
@@ -217,20 +183,9 @@ void update3dposition(uint64 serverConnectionHandlerID) {
 		enabled = false;
 	}
 
-	if (!Configured) {
-		try {
-			updateFromRemoteConfiguration();
-			printf("Configured from server");
-			Configured = true;
-		}
-		catch (const std::exception& e) {
-			printf("Unable to configure");
-		}
-	}
-
 	// Create http_client to send the request.
-	std::wstring concatStr = (L"http://" + ServerAddress + L":" + ServerPort + L"/request");
-	web::http::client::http_client client(concatStr);
+	web::http::client::http_client client(U("http://wolfz.uk:9000/request"));
+	
 	anyID id = NULL;
 	ts3Functions.getClientID(serverConnectionHandlerID, &id);
 	if (id == NULL) {
@@ -266,12 +221,12 @@ void update3dposition(uint64 serverConnectionHandlerID) {
 
 	TS3_VECTOR forward;
 	forward.x = 0.0f;
-	forward.y = 0.0f;
+	forward.y = 1.0f;
 	forward.z = 1.0f;
 
 	TS3_VECTOR up;
 	up.x = 0.0f;
-	up.y = 1.0f;
+	up.y = 1.5f;
 	up.z = 0.0f;
 
 	ts3Functions.systemset3DSettings(serverConnectionHandlerID, 1.0f, 1.0f);
@@ -392,28 +347,12 @@ int ts3plugin_offersConfigure() {
 	 * PLUGIN_OFFERS_CONFIGURE_NEW_THREAD - Plugin does implement ts3plugin_configure and requests to run this function in an own thread
 	 * PLUGIN_OFFERS_CONFIGURE_QT_THREAD  - Plugin does implement ts3plugin_configure and requests to run this function in the Qt GUI thread
 	 */
-	return PLUGIN_OFFERS_CONFIGURE_QT_THREAD;  /* In this case ts3plugin_configure does not need to be implemented */
+	return PLUGIN_OFFERS_NO_CONFIGURE;  /* In this case ts3plugin_configure does not need to be implemented */
 }
 
 /* Plugin might offer a configuration window. If ts3plugin_offersConfigure returns 0, this function does not need to be implemented. */
 void ts3plugin_configure(void* handle, void* qParentWidget) {
     printf("PLUGIN: configure\n");
-	if (pConf == nullptr) {
-		char path[128];
-		ts3Functions.getConfigPath(path, 128);
-		// Can use the qParentWidget pointer here, to make whatever window the client deems appropriate the parent of our config dialog
-		//pConf = new config(QString::fromUtf8(path), static_cast<QWidget*>(qParentWidget));
-		// or just ignore it and create it without a parent.
-		pConf = new config(QString::fromUtf8(path));
-	}
-	if (pConf->isVisible()) {
-		// Window is already displayed somewhere, bring it to the top and give it focus
-		pConf->raise();
-		pConf->activateWindow();
-	}
-	else {
-		pConf->show();
-	}
 }
 
 /*
@@ -544,8 +483,7 @@ enum {
 	MENU_ID_CHANNEL_ENABLE,
 	MENU_ID_CHANNEL_DISABLE,
 	MENU_ID_GLOBAL_ENABLE,
-	MENU_ID_GLOBAL_DISABLE,
-	MENU_ID_REFRESH_CONFIGURATION
+	MENU_ID_GLOBAL_DISABLE
 };
 
 /*
@@ -572,12 +510,11 @@ void ts3plugin_initMenus(struct PluginMenuItem*** menuItems, char** menuIcon) {
 	 * e.g. for "test_plugin.dll", icon "1.png" is loaded from <TeamSpeak 3 Client install dir>\plugins\test_plugin\1.png
 	 */
 
-	BEGIN_CREATE_MENUS(5);  /* IMPORTANT: Number of menu items must be correct! */
+	BEGIN_CREATE_MENUS(4);  /* IMPORTANT: Number of menu items must be correct! */
 	CREATE_MENU_ITEM(PLUGIN_MENU_TYPE_CHANNEL, MENU_ID_CHANNEL_ENABLE, "Enable on this channel", "1.png");
 	CREATE_MENU_ITEM(PLUGIN_MENU_TYPE_CHANNEL, MENU_ID_CHANNEL_DISABLE, "Disable on this channel", "2.png");
 	CREATE_MENU_ITEM(PLUGIN_MENU_TYPE_GLOBAL,  MENU_ID_GLOBAL_ENABLE,  "Enable Globally",  "1.png");
 	CREATE_MENU_ITEM(PLUGIN_MENU_TYPE_GLOBAL,  MENU_ID_GLOBAL_DISABLE,  "Disable Globally",  "2.png");
-	CREATE_MENU_ITEM(PLUGIN_MENU_TYPE_GLOBAL, MENU_ID_REFRESH_CONFIGURATION, "Refresh configuration", "3.png");
 	END_CREATE_MENUS;  /* Includes an assert checking if the number of menu items matched */
 
 	/*
@@ -881,7 +818,11 @@ void ts3plugin_onCustom3dRolloffCalculationClientEvent(uint64 serverConnectionHa
 	strvolume = strvolume.append(std::to_string(*volume));
 	//printf(strvolume.c_str());
 
-	if (distance < RolloffOffset) {
+	float a = 20.0f;
+	float b = 60.0f;
+	float c = 0.2f;
+
+	if (distance < a) {
 		*volume = 1.0f;
 	}
 	else {
@@ -889,7 +830,7 @@ void ts3plugin_onCustom3dRolloffCalculationClientEvent(uint64 serverConnectionHa
 		//1-\left(\frac{\left(\operatorname{abs}\left(x\right)-a\right)}{b-a}\right)^{c}\left\{\operatorname{abs}\left(x\right)>a\right\}
 		//y=1\left\{\operatorname{abs}\left(x\right)<a\right\}
 
-		float v = 1.0f - pow(((distance - RolloffOffset)/(RolloffCutoff-RolloffOffset)),RolloffAttenuationCoefficient);
+		float v = 1.0f - pow(((distance - a)/(b-a)),c);
 		if (v < 0.0f) {
 			v = 0.0f;
 		}
@@ -975,10 +916,6 @@ void ts3plugin_onMenuItemEvent(uint64 serverConnectionHandlerID, enum PluginMenu
 				case MENU_ID_GLOBAL_DISABLE:
 					/* Menu global 2 was triggered */
 					globallyEnabled = false;
-					break;
-				case MENU_ID_REFRESH_CONFIGURATION:
-					/* Menu global 2 was triggered */
-					Configured = false;
 					break;
 				default:
 					break;
