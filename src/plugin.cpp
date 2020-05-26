@@ -64,6 +64,8 @@ float RolloffOffset = 20.0f;
 float RolloffCutoff = 60.0f;
 float RolloffAttenuationCoefficient = 0.2f;
 
+int UpdatesPerSecond = 20;
+
 std::string ServerHost = "wolfz.uk";
 std::string ServerPort = "9000";
 
@@ -270,6 +272,13 @@ void update3dposition(uint64 serverConnectionHandlerID) {
 		return;
 	}
 
+	char* meclientUID = NULL;
+	ts3Functions.getClientVariableAsString(serverConnectionHandlerID, id, CLIENT_UNIQUE_IDENTIFIER, &meclientUID);
+	if (meclientUID == NULL) {
+		return;
+	}
+	std::string meclientUIDstr(meclientUID);
+
 	//Check which users are in channel
 	uint64 channelID = NULL;
 	ts3Functions.getChannelOfClient(serverConnectionHandlerID, id, &channelID);
@@ -307,9 +316,6 @@ void update3dposition(uint64 serverConnectionHandlerID) {
 	up.y = 1.0f;
 	up.z = 0.0f;
 
-	ts3Functions.systemset3DSettings(serverConnectionHandlerID, 1.0f, 1.0f);
-	ts3Functions.systemset3DListenerAttributes(serverConnectionHandlerID, &center, &forward, &up);
-
 	if (!enabled) {
 		//While clientidlist[i] not null
 		for (int i = 0; clientidlist[i]; ++i) {
@@ -332,22 +338,11 @@ void update3dposition(uint64 serverConnectionHandlerID) {
 		printf("POS Audio Disabled\n");
 		return;
 	}
-
-	char* meclientUID = NULL;
-	ts3Functions.getClientVariableAsString(serverConnectionHandlerID, id, CLIENT_UNIQUE_IDENTIFIER, &meclientUID);
-	if (meclientUID == NULL) {
-		return;
-	}
-	std::string meclientUIDstr(meclientUID);
 	
 	// Create http_client to send the request.
 	const std::string candidateUri = "http://" + ServerHost + ":" + ServerPort + "";
 
-	cout << candidateUri << endl;
-
 	utility::string_t concatStr = utility::conversions::to_string_t(candidateUri);
-
-	cout << concatStr.c_str() << endl;
 
 	web::http::client::http_client client(concatStr);
 
@@ -397,6 +392,23 @@ void update3dposition(uint64 serverConnectionHandlerID) {
 					}
 					else if (meclientUIDstr == clientstr) {
 						//TS user is player
+						json::array posArray = jsonVal[clientid].as_array();
+
+						double pitch = posArray[3].as_double();
+						double yaw = posArray[4].as_double();
+
+						double xzLen = cos(pitch);
+						double x = xzLen * cos(yaw);
+						double y = sin(pitch);
+						double z = xzLen * sin(-yaw);
+
+						TS3_VECTOR new_forward;
+						new_forward.x = (float)x;
+						new_forward.y = (float)y;
+						new_forward.z = (float)z;
+
+						ts3Functions.systemset3DSettings(serverConnectionHandlerID, 1.0f, 1.0f);
+						ts3Functions.systemset3DListenerAttributes(serverConnectionHandlerID, &center, &new_forward, &up);
 					}
 				}
 
@@ -784,7 +796,7 @@ void ts3plugin_onClientMoveEvent(uint64 serverConnectionHandlerID, anyID clientI
 	//update3dposition(serverConnectionHandlerID);
 	updateConfigFromChannelDescription(serverConnectionHandlerID, newChannelID);
 	t.stop();
-	t.setInterval(&update3dposition, serverConnectionHandlerID, 5000);
+	t.setInterval(&update3dposition, serverConnectionHandlerID, 1000/UpdatesPerSecond);
 }
 
 void ts3plugin_onClientMoveSubscriptionEvent(uint64 serverConnectionHandlerID, anyID clientID, uint64 oldChannelID, uint64 newChannelID, int visibility) {
