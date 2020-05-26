@@ -545,9 +545,9 @@ void ts3plugin_initMenus(struct PluginMenuItem*** menuItems, char** menuIcon) {
 	 * e.g. for "test_plugin.dll", icon "1.png" is loaded from <TeamSpeak 3 Client install dir>\plugins\test_plugin\1.png
 	 */
 
-	BEGIN_CREATE_MENUS(5);  /* IMPORTANT: Number of menu items must be correct! */
-	CREATE_MENU_ITEM(PLUGIN_MENU_TYPE_CHANNEL, MENU_ID_CHANNEL_ENABLE, "Enable on this channel", "1.png");
-	CREATE_MENU_ITEM(PLUGIN_MENU_TYPE_CHANNEL, MENU_ID_CHANNEL_DISABLE, "Disable on this channel", "2.png");
+	BEGIN_CREATE_MENUS(3);  /* IMPORTANT: Number of menu items must be correct! */
+	//CREATE_MENU_ITEM(PLUGIN_MENU_TYPE_CHANNEL, MENU_ID_CHANNEL_ENABLE, "Enable on this channel", "1.png");
+	//CREATE_MENU_ITEM(PLUGIN_MENU_TYPE_CHANNEL, MENU_ID_CHANNEL_DISABLE, "Disable on this channel", "2.png");
 	CREATE_MENU_ITEM(PLUGIN_MENU_TYPE_GLOBAL,  MENU_ID_GLOBAL_ENABLE,  "Enable Globally",  "1.png");
 	CREATE_MENU_ITEM(PLUGIN_MENU_TYPE_GLOBAL,  MENU_ID_GLOBAL_DISABLE,  "Disable Globally",  "2.png");
 	CREATE_MENU_ITEM(PLUGIN_MENU_TYPE_GLOBAL, MENU_ID_REFRESH_CONFIGURATION, "Refresh configuration", "3.png");
@@ -960,26 +960,26 @@ void ts3plugin_onMenuItemEvent(uint64 serverConnectionHandlerID, enum PluginMenu
 		case PLUGIN_MENU_TYPE_CHANNEL:
 			/* Channel contextmenu item was triggered. selectedItemID is the channelID of the selected channel */
 			switch(menuItemID) {
-				case MENU_ID_CHANNEL_ENABLE:
-					/* Menu channel 1 was triggered */
-					if (ts3Functions.getChannelVariableAsString(serverConnectionHandlerID, selectedItemID, CHANNEL_NAME, &Chname) != ERROR_ok) {
-						printf("Error getting channel name\n");
-						return;
-					}
-					else {
-						channelEnableMap[selectedItemID] = true;
-					}
-					break;
-				case MENU_ID_CHANNEL_DISABLE:
-					/* Menu channel 2 was triggered */
-					if (ts3Functions.getChannelVariableAsString(serverConnectionHandlerID, selectedItemID, CHANNEL_NAME, &Chname) != ERROR_ok) {
-						printf("Error getting channel name\n");
-						return;
-					}
-					else {
-						channelEnableMap[selectedItemID] = false;
-					}
-					break;
+				//case MENU_ID_CHANNEL_ENABLE:
+				//	/* Menu channel 1 was triggered */
+				//	if (ts3Functions.getChannelVariableAsString(serverConnectionHandlerID, selectedItemID, CHANNEL_NAME, &Chname) != ERROR_ok) {
+				//		printf("Error getting channel name\n");
+				//		return;
+				//	}
+				//	else {
+				//		channelEnableMap[selectedItemID] = true;
+				//	}
+				//	break;
+				//case MENU_ID_CHANNEL_DISABLE:
+				//	/* Menu channel 2 was triggered */
+				//	if (ts3Functions.getChannelVariableAsString(serverConnectionHandlerID, selectedItemID, CHANNEL_NAME, &Chname) != ERROR_ok) {
+				//		printf("Error getting channel name\n");
+				//		return;
+				//	}
+				//	else {
+				//		channelEnableMap[selectedItemID] = false;
+				//	}
+				//	break;
 				default:
 					break;
 			}
