@@ -4,16 +4,15 @@
  * Copyright (c) TeamSpeak Systems GmbH
  */
 
-#if defined(WIN32) || defined(__WIN32__) || defined(_WIN32)
-#pragma warning (disable : 4100)  /* Disable Unreferenced parameter warning */
-#include <Windows.h>
-#endif
+//#if defined(WIN32) || defined(__WIN32__) || defined(_WIN32)
+//#pragma warning (disable : 4100)  /* Disable Unreferenced parameter warning */
+//#include <Windows.h>
+//#endif
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <string>
-#include <cstdlib>
 #include <assert.h>
 #include <map>
 #include "cpprest/http_client.h"
@@ -36,6 +35,7 @@ using namespace web::http;                  // Common HTTP functionality
 using namespace web::http::client;          // HTTP client features
 using namespace concurrency::streams;       // Asynchronous streams
 using namespace web::json;                  // JSON Lib
+using namespace std;
 
 static struct TS3Functions ts3Functions;
 
@@ -64,22 +64,23 @@ float RolloffOffset = 20.0f;
 float RolloffCutoff = 60.0f;
 float RolloffAttenuationCoefficient = 0.2f;
 
-struct ServerConfig CurrentServerConfig = { L"www.wolfz.uk" ,  L"9000" };
+std::string ServerHost = "wolfz.uk";
+std::string ServerPort = "9000";
 
 bool Configured = false;
 
-#ifdef _WIN32
-/* Helper function to convert wchar_T to Utf-8 encoded strings on Windows */
-static int wcharToUtf8(const wchar_t* str, char** result) {
-	int outlen = WideCharToMultiByte(CP_UTF8, 0, str, -1, 0, 0, 0, 0);
-	*result = (char*)malloc(outlen);
-	if(WideCharToMultiByte(CP_UTF8, 0, str, -1, *result, outlen, 0, 0) == 0) {
-		*result = NULL;
-		return -1;
-	}
-	return 0;
-}
-#endif
+//#ifdef _WIN32
+///* Helper function to convert wchar_T to Utf-8 encoded strings on Windows */
+//static int wcharToUtf8(const wchar_t* str, char** result) {
+//	int outlen = WideCharToMultiByte(CP_UTF8, 0, str, -1, 0, 0, 0, 0);
+//	*result = (char*)malloc(outlen);
+//	if(WideCharToMultiByte(CP_UTF8, 0, str, -1, *result, outlen, 0, 0) == 0) {
+//		*result = NULL;
+//		return -1;
+//	}
+//	return 0;
+//}
+//#endif
 
 /*********************************** Required functions ************************************/
 /*
@@ -88,19 +89,19 @@ static int wcharToUtf8(const wchar_t* str, char** result) {
 
 /* Unique name identifying this plugin */
 const char* ts3plugin_name() {
-#ifdef _WIN32
-	/* TeamSpeak expects UTF-8 encoded characters. Following demonstrates a possibility how to convert UTF-16 wchar_t into UTF-8. */
-	static char* result = NULL;  /* Static variable so it's allocated only once */
-	if(!result) {
-		const wchar_t* name = L"CPP-PAR";
-		if(wcharToUtf8(name, &result) == -1) {  /* Convert name into UTF-8 encoded result */
-			return "CPP-PAR";  /* Conversion failed, fallback here */
-		}
-	}
-	return result;
-#else
+//#ifdef _WIN32
+//	/* TeamSpeak expects UTF-8 encoded characters. Following demonstrates a possibility how to convert UTF-16 wchar_t into UTF-8. */
+//	static char* result = NULL;  /* Static variable so it's allocated only once */
+//	if(!result) {
+//		const wchar_t* name = L"CPP-PAR";
+//		if(wcharToUtf8(name, &result) == -1) {  /* Convert name into UTF-8 encoded result */
+//			return "CPP-PAR";  /* Conversion failed, fallback here */
+//		}
+//	}
+//	return result;
+//#else
 	return "CPP-PAR";
-#endif
+//#endif
 }
 
 Timer t;
@@ -167,16 +168,20 @@ int ts3plugin_init() {
 }
 
 void updateFromRemoteConfiguration() {
-	std::wstring concatStr = (U("http://") + CurrentServerConfig.host + U(":") + CurrentServerConfig.port + U("/config"));
+
+	std::string candidateUri = "http://" + std::string(ServerHost) +  std::string(":") + std::string(ServerPort);
+
+	utility::string_t concatStr = utility::conversions::to_string_t(candidateUri);
+
 	web::http::client::http_client client(concatStr);
-	uri_builder builder(U("/"));
+	uri_builder builder(U("/config"));
 	http_response response = client.request(methods::GET, builder.to_string()).get();
 
 	//Parse network response
 	json::object jsonVal = response.extract_json().get().as_object();
 
 	RolloffCutoff = jsonVal[L"cutoffDistance"].as_double();
-	RolloffAttenuationCoefficient = jsonVal[L"dropOffGradientCoefficient"].as_double();
+	RolloffAttenuationCoefficient = jsonVal[L"attenuationCoefficient"].as_double();
 	RolloffOffset = jsonVal[L"safeZoneSize"].as_double();
 }
 
@@ -198,29 +203,44 @@ void ts3plugin_shutdown() {
 	}
 }
 
-void updateCurrentReportingServerConfig(utility::string_t serverAddress, utility::string_t serverPort) {
-	CurrentServerConfig.host = serverAddress;
-	CurrentServerConfig.port = serverPort;
+void updateCurrentReportingServerConfig(std::string serverAddress, std::string serverPort) {
+	//ServerHost = serverAddress;
+	//ServerPort = serverPort;
 }
 
 void updateConfigFromChannelDescription(uint64 serverConnectionHandlerID, uint64 channelID) {
 
-	char* channelDesc = NULL;
-	ts3Functions.requestChannelDescription(serverConnectionHandlerID, channelID, channelDesc);
+	char* channelDesc;
+	ts3Functions.getChannelVariableAsString(serverConnectionHandlerID, channelID, CHANNEL_DESCRIPTION, &channelDesc);
 
-	utility::string_t channelDescStr = utility::conversions::to_string_t(channelDesc);
+	std::string channelDescStr(channelDesc);
 
-	utility::string_t serverAddress = NULL;
-	utility::string_t serverPort = NULL;
+	int startPos = channelDescStr.find_first_of("|");
+	if (!(startPos == -1l)) {
+		int midPos = channelDescStr.find_first_of("|", startPos+1);
 
-	int startPos = channelDescStr.find_first_of(U("|"));
-	int midPos = channelDescStr.find_first_of(U("|", startPos));
-	int endPos = channelDescStr.find_first_of(U("|", midPos));
+		if (!(midPos == -1l)) {
+			std::string serverAddress = channelDescStr.substr(startPos + 1, midPos - (startPos+1));
 
-	serverAddress = channelDescStr.substr(startPos, midPos);
-	serverPort = channelDescStr.substr(midPos, endPos);
+			int endPos = channelDescStr.find_first_of("|", midPos + 1);
 
-	updateCurrentReportingServerConfig(serverAddress, serverPort);
+			if (!(endPos == -1l)) {
+				std::string serverPort = channelDescStr.substr(midPos + 1, endPos - (midPos+1));
+
+				printf("PLUGIN: Server Setting: %s %s\n", serverAddress, serverPort);
+				updateCurrentReportingServerConfig(serverAddress, serverPort);
+			}
+			else {
+				std::string serverPort = "9000";
+
+				printf("PLUGIN: Server Setting: %s %s\n", serverAddress, serverPort);
+				updateCurrentReportingServerConfig(serverAddress, serverPort);
+			}
+		}
+		else {
+			Configured = false;
+		}
+	}
 }
 
 void update3dposition(uint64 serverConnectionHandlerID) {
@@ -234,18 +254,16 @@ void update3dposition(uint64 serverConnectionHandlerID) {
 	if (!Configured) {
 		try {
 			updateFromRemoteConfiguration();
-			printf("Configured from server");
+			printf("Configured from server\n");
 			Configured = true;
 		}
 		catch (const std::exception& e) {
-			printf("Unable to configure");
+			printf("%s\n", e.what());
+			printf("Unable to configure\n");
+			return;
 		}
 	}
 
-	// Create http_client to send the request.
-	utility::string_t concatStr = (U("http://") + CurrentServerConfig.host + U(":") + CurrentServerConfig.port + U("/request"));
-
-	web::http::client::http_client client(concatStr);
 	anyID id = NULL;
 	ts3Functions.getClientID(serverConnectionHandlerID, &id);
 	if (id == NULL) {
@@ -259,14 +277,14 @@ void update3dposition(uint64 serverConnectionHandlerID) {
 		return;
 	}
 
-	if (channelEnableMap[channelID] != NULL) {
-		if (!channelEnableMap[channelID]) {
-			enabled = false;
-		}
-	}
-	else {
-		enabled = false;
-	}
+	//if (channelEnableMap[channelID] != NULL) {
+	//	if (!channelEnableMap[channelID]) {
+	//		enabled = false;
+	//	}
+	//}
+	//else {
+	//	enabled = false;
+	//}
 
 	anyID* clientidlist = NULL;
 	ts3Functions.getChannelClientList(serverConnectionHandlerID, channelID, &clientidlist);
@@ -322,9 +340,20 @@ void update3dposition(uint64 serverConnectionHandlerID) {
 	}
 	std::string meclientUIDstr(meclientUID);
 	
+	// Create http_client to send the request.
+	const std::string candidateUri = "http://" + ServerHost + ":" + ServerPort + "";
+
+	cout << candidateUri << endl;
+
+	utility::string_t concatStr = utility::conversions::to_string_t(candidateUri);
+
+	cout << concatStr.c_str() << endl;
+
+	web::http::client::http_client client(concatStr);
+
 	try {
 		// Build request URI and start the request.
-		uri_builder builder(U("/"));
+		uri_builder builder(U("/request"));
 		builder.append_query(U("id"), conversions::to_string_t(meclientUIDstr)); //May turn the pointer to a string not the ID.... std::to_string(*id)
 		http_response response = client.request(methods::GET, builder.to_string()).get();
 
@@ -738,7 +767,6 @@ void ts3plugin_onDelChannelEvent(uint64 serverConnectionHandlerID, uint64 channe
 }
 
 void ts3plugin_onChannelMoveEvent(uint64 serverConnectionHandlerID, uint64 channelID, uint64 newChannelParentID, anyID invokerID, const char* invokerName, const char* invokerUniqueIdentifier) {
-	// TODO: Check if channel has PosAudio Config
 }
 
 void ts3plugin_onUpdateChannelEvent(uint64 serverConnectionHandlerID, uint64 channelID) {
@@ -754,8 +782,9 @@ void ts3plugin_onUpdateClientEvent(uint64 serverConnectionHandlerID, anyID clien
 
 void ts3plugin_onClientMoveEvent(uint64 serverConnectionHandlerID, anyID clientID, uint64 oldChannelID, uint64 newChannelID, int visibility, const char* moveMessage) {
 	//update3dposition(serverConnectionHandlerID);
+	updateConfigFromChannelDescription(serverConnectionHandlerID, newChannelID);
 	t.stop();
-	t.setInterval(&update3dposition, serverConnectionHandlerID, 1000/10);
+	t.setInterval(&update3dposition, serverConnectionHandlerID, 5000);
 }
 
 void ts3plugin_onClientMoveSubscriptionEvent(uint64 serverConnectionHandlerID, anyID clientID, uint64 oldChannelID, uint64 newChannelID, int visibility) {

@@ -151,9 +151,3 @@ PLUGINS_EXPORTDLL const char* ts3plugin_keyPrefix();
 #endif
 
 #endif
-
-struct ServerConfig
-{
-    utility::string_t host;
-    utility::string_t port;
-};

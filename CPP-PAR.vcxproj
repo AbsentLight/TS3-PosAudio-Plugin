@@ -79,6 +79,8 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(ProjectDir)include;$(ProjectDir)include\teamspeak;$(ProjectDir)include\teamlog;$(ProjectDir)include\timer;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <CompileAs>CompileAsCpp</CompileAs>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -89,7 +91,7 @@
       <AdditionalDependencies>bcrypt.lib;winhttp.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy /y $(ProjectDir)x64\Release\CPP-PAR.dll %APPDATA%\TS3Client\plugins\CPP-PAR.dll &amp;&amp; "C:\Program Files\TeamSpeak 3 Client\ts3client_win64.exe" -console</Command>
+      <Command>copy /y $(ProjectDir)x64\Release\CPP-PAR.dll %APPDATA%\TS3Client\plugins\CPP-PAR.dll &amp;&amp; "C:\Program Files\TeamSpeak 3 Client\ts3client_win64.exe" -console &amp;&amp; pause</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
