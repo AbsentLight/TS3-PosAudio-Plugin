@@ -70,9 +70,6 @@ std::wstring ServerPort = L"9000";
 
 bool Configured = false;
 
-#include "config.h"
-config* pConf = nullptr;
-
 #ifdef _WIN32
 /* Helper function to convert wchar_T to Utf-8 encoded strings on Windows */
 static int wcharToUtf8(const wchar_t* str, char** result) {
@@ -195,12 +192,6 @@ void ts3plugin_shutdown() {
 	 * If your plugin implements a settings dialog, it must be closed and deleted here, else the
 	 * TeamSpeak client will most likely crash (DLL removed but dialog from DLL code still open).
 	 */
-
-	if (pConf) {
-		pConf->close();
-		delete pConf;
-		pConf = nullptr;
-	}
 
 	/* Free pluginID if we registered it */
 	if(pluginID) {
@@ -398,22 +389,6 @@ int ts3plugin_offersConfigure() {
 /* Plugin might offer a configuration window. If ts3plugin_offersConfigure returns 0, this function does not need to be implemented. */
 void ts3plugin_configure(void* handle, void* qParentWidget) {
     printf("PLUGIN: configure\n");
-	if (pConf == nullptr) {
-		char path[128];
-		ts3Functions.getConfigPath(path, 128);
-		// Can use the qParentWidget pointer here, to make whatever window the client deems appropriate the parent of our config dialog
-		//pConf = new config(QString::fromUtf8(path), static_cast<QWidget*>(qParentWidget));
-		// or just ignore it and create it without a parent.
-		pConf = new config(QString::fromUtf8(path));
-	}
-	if (pConf->isVisible()) {
-		// Window is already displayed somewhere, bring it to the top and give it focus
-		pConf->raise();
-		pConf->activateWindow();
-	}
-	else {
-		pConf->show();
-	}
 }
 
 /*
