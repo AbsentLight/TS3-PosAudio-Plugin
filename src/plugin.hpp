@@ -27,6 +27,8 @@ PLUGINS_EXPORTDLL void ts3plugin_setFunctionPointers(const struct TS3Functions f
 PLUGINS_EXPORTDLL int ts3plugin_init();
 PLUGINS_EXPORTDLL void ts3plugin_shutdown();
 PLUGINS_EXPORTDLL void update3dposition(uint64);
+PLUGINS_EXPORTDLL void updateCurrentReportingServerConfig(utility::string_t, utility::string_t);
+PLUGINS_EXPORTDLL void updateConfigFromChannelDescription(uint64, uint64);
 
 /* Optional functions */
 PLUGINS_EXPORTDLL int ts3plugin_offersConfigure();
@@ -149,3 +151,9 @@ PLUGINS_EXPORTDLL const char* ts3plugin_keyPrefix();
 #endif
 
 #endif
+
+struct ServerConfig
+{
+    utility::string_t host;
+    utility::string_t port;
+};

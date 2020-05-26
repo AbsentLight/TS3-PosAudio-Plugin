@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <string>
+#include <cstdlib>
 #include <assert.h>
 #include <map>
 #include "cpprest/http_client.h"
@@ -63,8 +64,7 @@ float RolloffOffset = 20.0f;
 float RolloffCutoff = 60.0f;
 float RolloffAttenuationCoefficient = 0.2f;
 
-std::wstring ServerAddress = L"www.wolfz.uk";
-std::wstring ServerPort = L"9000";
+struct ServerConfig CurrentServerConfig = { L"www.wolfz.uk" ,  L"9000" };
 
 bool Configured = false;
 
@@ -107,7 +107,7 @@ Timer t;
 
 /* Plugin version */
 const char* ts3plugin_version() {
-    return "1.2";
+    return "1.3";
 }
 
 /* Plugin API version. Must be the same as the clients API major version, else the plugin fails to load. */
@@ -167,7 +167,7 @@ int ts3plugin_init() {
 }
 
 void updateFromRemoteConfiguration() {
-	std::wstring concatStr = (L"http://" + ServerAddress + L":" + ServerPort + L"/config");
+	std::wstring concatStr = (U("http://") + CurrentServerConfig.host + U(":") + CurrentServerConfig.port + U("/config"));
 	web::http::client::http_client client(concatStr);
 	uri_builder builder(U("/"));
 	http_response response = client.request(methods::GET, builder.to_string()).get();
@@ -198,6 +198,31 @@ void ts3plugin_shutdown() {
 	}
 }
 
+void updateCurrentReportingServerConfig(utility::string_t serverAddress, utility::string_t serverPort) {
+	CurrentServerConfig.host = serverAddress;
+	CurrentServerConfig.port = serverPort;
+}
+
+void updateConfigFromChannelDescription(uint64 serverConnectionHandlerID, uint64 channelID) {
+
+	char* channelDesc = NULL;
+	ts3Functions.requestChannelDescription(serverConnectionHandlerID, channelID, channelDesc);
+
+	utility::string_t channelDescStr = utility::conversions::to_string_t(channelDesc);
+
+	utility::string_t serverAddress = NULL;
+	utility::string_t serverPort = NULL;
+
+	int startPos = channelDescStr.find_first_of(U("|"));
+	int midPos = channelDescStr.find_first_of(U("|", startPos));
+	int endPos = channelDescStr.find_first_of(U("|", midPos));
+
+	serverAddress = channelDescStr.substr(startPos, midPos);
+	serverPort = channelDescStr.substr(midPos, endPos);
+
+	updateCurrentReportingServerConfig(serverAddress, serverPort);
+}
+
 void update3dposition(uint64 serverConnectionHandlerID) {
 
 	bool enabled = true;
@@ -218,7 +243,8 @@ void update3dposition(uint64 serverConnectionHandlerID) {
 	}
 
 	// Create http_client to send the request.
-	std::wstring concatStr = (L"http://" + ServerAddress + L":" + ServerPort + L"/request");
+	utility::string_t concatStr = (U("http://") + CurrentServerConfig.host + U(":") + CurrentServerConfig.port + U("/request"));
+
 	web::http::client::http_client client(concatStr);
 	anyID id = NULL;
 	ts3Functions.getClientID(serverConnectionHandlerID, &id);
@@ -712,13 +738,15 @@ void ts3plugin_onDelChannelEvent(uint64 serverConnectionHandlerID, uint64 channe
 }
 
 void ts3plugin_onChannelMoveEvent(uint64 serverConnectionHandlerID, uint64 channelID, uint64 newChannelParentID, anyID invokerID, const char* invokerName, const char* invokerUniqueIdentifier) {
-
+	// TODO: Check if channel has PosAudio Config
 }
 
 void ts3plugin_onUpdateChannelEvent(uint64 serverConnectionHandlerID, uint64 channelID) {
+
 }
 
 void ts3plugin_onUpdateChannelEditedEvent(uint64 serverConnectionHandlerID, uint64 channelID, anyID invokerID, const char* invokerName, const char* invokerUniqueIdentifier) {
+	// TODO: Check if channel has PosAudio Config
 }
 
 void ts3plugin_onUpdateClientEvent(uint64 serverConnectionHandlerID, anyID clientID, anyID invokerID, const char* invokerName, const char* invokerUniqueIdentifier) {
