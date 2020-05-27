@@ -67,7 +67,9 @@ float RolloffAttenuationCoefficient = 0.2f;
 std::string ServerHost = "wolfz.uk";
 std::string ServerPort = "9000";
 
-bool Configured = false;
+bool ChannelHasConfig = false;
+
+Timer t;
 
 //#ifdef _WIN32
 ///* Helper function to convert wchar_T to Utf-8 encoded strings on Windows */
@@ -103,8 +105,6 @@ const char* ts3plugin_name() {
 	return "CPP-PAR";
 //#endif
 }
-
-Timer t;
 
 /* Plugin version */
 const char* ts3plugin_version() {
@@ -167,22 +167,29 @@ int ts3plugin_init() {
 	 * For normal case, if a plugin really failed to load because of an error, the correct return value is 1. */
 }
 
-void updateFromRemoteConfiguration() {
+void updateFromRemoteConfiguration(uint64 serverConnectionHandlerID) {
+	ts3Functions.logMessage("Attempting to get attenuation config from remote", LogLevel_INFO, "Plugin", serverConnectionHandlerID);
 
 	std::string candidateUri = "http://" + std::string(ServerHost) +  std::string(":") + std::string(ServerPort);
-
 	utility::string_t concatStr = utility::conversions::to_string_t(candidateUri);
-
 	web::http::client::http_client client(concatStr);
 	uri_builder builder(U("/config"));
-	http_response response = client.request(methods::GET, builder.to_string()).get();
 
-	//Parse network response
-	json::object jsonVal = response.extract_json().get().as_object();
+	try {
+		http_response response = client.request(methods::GET, builder.to_string()).get();
 
-	RolloffCutoff = jsonVal[L"cutoffDistance"].as_double();
-	RolloffAttenuationCoefficient = jsonVal[L"attenuationCoefficient"].as_double();
-	RolloffOffset = jsonVal[L"safeZoneSize"].as_double();
+		//Parse network response
+		json::object jsonVal = response.extract_json().get().as_object();
+
+		RolloffCutoff = jsonVal[L"cutoffDistance"].as_double();
+		RolloffAttenuationCoefficient = jsonVal[L"attenuationCoefficient"].as_double();
+		RolloffOffset = jsonVal[L"safeZoneSize"].as_double();
+
+		ts3Functions.logMessage("Successfully updated attenuation config from remote", LogLevel_INFO, "Plugin", serverConnectionHandlerID);
+	}
+	catch (const std::exception& e) {
+		ts3Functions.logMessage("Failed to load attenuation config from remote", LogLevel_ERROR, "Plugin", serverConnectionHandlerID);
+	}
 }
 
 /* Custom code called right before the plugin is unloaded */
@@ -204,11 +211,13 @@ void ts3plugin_shutdown() {
 }
 
 void updateCurrentReportingServerConfig(std::string serverAddress, std::string serverPort) {
-	//ServerHost = serverAddress;
-	//ServerPort = serverPort;
+	ServerHost = serverAddress;
+	ServerPort = serverPort;
 }
 
 void updateConfigFromChannelDescription(uint64 serverConnectionHandlerID, uint64 channelID) {
+
+	ts3Functions.logMessage("Attempting to get remote host's config from channel", LogLevel_INFO, "Plugin", serverConnectionHandlerID);
 
 	char* channelDesc;
 	ts3Functions.getChannelVariableAsString(serverConnectionHandlerID, channelID, CHANNEL_DESCRIPTION, &channelDesc);
@@ -225,21 +234,32 @@ void updateConfigFromChannelDescription(uint64 serverConnectionHandlerID, uint64
 			int endPos = channelDescStr.find_first_of("|", midPos + 1);
 
 			if (!(endPos == -1l)) {
+				ts3Functions.logMessage("Host and port config found", LogLevel_INFO, "Plugin", serverConnectionHandlerID);
+
 				std::string serverPort = channelDescStr.substr(midPos + 1, endPos - (midPos+1));
 
 				printf("PLUGIN: Server Setting: %s %s\n", serverAddress, serverPort);
 				updateCurrentReportingServerConfig(serverAddress, serverPort);
+				ChannelHasConfig = true;
 			}
 			else {
+				ts3Functions.logMessage("Host only config found", LogLevel_INFO, "Plugin", serverConnectionHandlerID);
+
 				std::string serverPort = "9000";
 
 				printf("PLUGIN: Server Setting: %s %s\n", serverAddress, serverPort);
 				updateCurrentReportingServerConfig(serverAddress, serverPort);
+				ChannelHasConfig = true;
 			}
 		}
 		else {
-			Configured = false;
+			ts3Functions.logMessage("No valid config found (Single '|')", LogLevel_INFO, "Plugin", serverConnectionHandlerID);
+			ChannelHasConfig = false;
 		}
+	} 
+	else {
+		ts3Functions.logMessage("No valid config found", LogLevel_INFO, "Plugin", serverConnectionHandlerID);
+		ChannelHasConfig = false;
 	}
 }
 
@@ -249,19 +269,6 @@ void update3dposition(uint64 serverConnectionHandlerID) {
 
 	if (!globallyEnabled) {
 		enabled = false;
-	}
-
-	if (!Configured) {
-		try {
-			updateFromRemoteConfiguration();
-			printf("Configured from server\n");
-			Configured = true;
-		}
-		catch (const std::exception& e) {
-			printf("%s\n", e.what());
-			printf("Unable to configure\n");
-			return;
-		}
 	}
 
 	anyID id = NULL;
@@ -474,64 +481,6 @@ void ts3plugin_currentServerConnectionChanged(uint64 serverConnectionHandlerID) 
 /* Static title shown in the left column in the info frame */
 const char* ts3plugin_infoTitle() {
 	return "CPP-PAR";
-}
-
-/*
- * Dynamic content shown in the right column in the info frame. Memory for the data string needs to be allocated in this
- * function. The client will call ts3plugin_freeMemory once done with the string to release the allocated memory again.
- * Check the parameter "type" if you want to implement this feature only for specific item types. Set the parameter
- * "data" to NULL to have the client ignore the info data.
- */
-void ts3plugin_infoData(uint64 serverConnectionHandlerID, uint64 id, enum PluginItemType type, char** data) {
-	char* name;
-
-	/* For demonstration purpose, display the name of the currently selected server, channel or client. */
-	switch(type) {
-		case PLUGIN_SERVER:
-			if(ts3Functions.getServerVariableAsString(serverConnectionHandlerID, VIRTUALSERVER_NAME, &name) != ERROR_ok) {
-				//printf("Error getting virtual server name\n");
-				return;
-			}
-			else {
-				//printf("CPP-PAR available\n");
-			}
-			break;
-		case PLUGIN_CHANNEL:
-			if(ts3Functions.getChannelVariableAsString(serverConnectionHandlerID, id, CHANNEL_NAME, &name) != ERROR_ok) {
-				printf("Error getting channel name\n");
-				return;
-			}
-			else {
-				std::map<uint64,bool>::iterator iter = channelEnableMap.find(id);
-				if (iter == channelEnableMap.end()) {
-					*data = (char*)malloc(INFODATA_BUFSIZE * sizeof(char));  /* Must be allocated in the plugin! */
-					snprintf(*data, INFODATA_BUFSIZE, "CPP-PAR is %s on this channel\n", "disabled");  /* bbCode is supported. HTML is not supported */
-				}
-				else {
-					if (channelEnableMap[id]) {
-						*data = (char*)malloc(INFODATA_BUFSIZE * sizeof(char));  /* Must be allocated in the plugin! */
-						snprintf(*data, INFODATA_BUFSIZE, "CPP-PAR is %s on this channel\n", "enabled");  /* bbCode is supported. HTML is not supported */
-					}
-					else {
-						*data = (char*)malloc(INFODATA_BUFSIZE * sizeof(char));  /* Must be allocated in the plugin! */
-						snprintf(*data, INFODATA_BUFSIZE, "CPP-PAR is %s on this channel\n", "disabled");  /* bbCode is supported. HTML is not supported */
-					}
-				}
-			}
-			break;
-		case PLUGIN_CLIENT:
-			if(ts3Functions.getClientVariableAsString(serverConnectionHandlerID, (anyID)id, CLIENT_NICKNAME, &name) != ERROR_ok) {
-				//printf("Error getting client nickname\n");
-				return;
-			}
-			break;
-		default:
-			//printf("Invalid item type: %d\n", type);
-			data = NULL;  /* Ignore */
-			return;
-	}
-
-	ts3Functions.freeMemory(name);
 }
 
 /* Required to release the memory for parameter "data" allocated in ts3plugin_infoData and ts3plugin_initMenus */
@@ -774,17 +723,75 @@ void ts3plugin_onUpdateChannelEvent(uint64 serverConnectionHandlerID, uint64 cha
 }
 
 void ts3plugin_onUpdateChannelEditedEvent(uint64 serverConnectionHandlerID, uint64 channelID, anyID invokerID, const char* invokerName, const char* invokerUniqueIdentifier) {
-	// TODO: Check if channel has PosAudio Config
+	// TODO: Check if channel gets PosAudio Config
+
+	// Get our user id
+	anyID myID;
+	if (ts3Functions.getClientID(serverConnectionHandlerID, &myID) != ERROR_ok) {
+		ts3Functions.logMessage("Error querying client ID", LogLevel_ERROR, "Plugin", serverConnectionHandlerID);
+		return;
+	}
+
+	// Get the channel id of the channel we're in
+	uint64 currentChannelID = NULL;
+	ts3Functions.getChannelOfClient(serverConnectionHandlerID, myID, &currentChannelID);
+	if (channelID == NULL) {
+		return;
+	}
+
+	if (channelID == currentChannelID) {
+
+		ts3Functions.logMessage("Channel we are in was edited", LogLevel_INFO, "Plugin", serverConnectionHandlerID);
+
+		t.stop();
+		updateConfigFromChannelDescription(serverConnectionHandlerID, channelID);
+
+		if (ChannelHasConfig) {
+			// Attempt to get new parameters from the remote
+			updateFromRemoteConfiguration(serverConnectionHandlerID);
+
+			// Update the 3D positions of clients without delay
+			update3dposition(serverConnectionHandlerID);
+
+			// Schedule updates on an interval
+			t.setInterval(&update3dposition, serverConnectionHandlerID, 1000);
+		}
+	}
 }
 
 void ts3plugin_onUpdateClientEvent(uint64 serverConnectionHandlerID, anyID clientID, anyID invokerID, const char* invokerName, const char* invokerUniqueIdentifier) {
 }
 
 void ts3plugin_onClientMoveEvent(uint64 serverConnectionHandlerID, anyID clientID, uint64 oldChannelID, uint64 newChannelID, int visibility, const char* moveMessage) {
-	//update3dposition(serverConnectionHandlerID);
-	updateConfigFromChannelDescription(serverConnectionHandlerID, newChannelID);
-	t.stop();
-	t.setInterval(&update3dposition, serverConnectionHandlerID, 5000);
+
+	printf("ts3plugin_onClientMoveEvent: %d %d %d %d %d %s\n", serverConnectionHandlerID, clientID, oldChannelID, newChannelID, visibility, moveMessage);
+
+	anyID myID;
+	if (ts3Functions.getClientID(serverConnectionHandlerID, &myID) != ERROR_ok) {
+		ts3Functions.logMessage("Error querying client ID", LogLevel_ERROR, "Plugin", serverConnectionHandlerID);
+		return;
+	}
+
+	printf("ts3plugin_onClientMoveEvent IDs: %d %d\n", myID, clientID);
+
+	cout << &t << endl;
+
+	if (myID == clientID) {
+		// We moved channel so should stop updating positions until we can establish the channel's config
+		t.stop();
+		updateConfigFromChannelDescription(serverConnectionHandlerID, newChannelID);
+	}
+
+	if (ChannelHasConfig) {
+		// Attempt to get new parameters from the remote
+		updateFromRemoteConfiguration(serverConnectionHandlerID);
+
+		// Update the 3D positions of clients instantly
+		update3dposition(serverConnectionHandlerID);
+
+		// Schedule updates on an interval
+		t.setInterval(&update3dposition, serverConnectionHandlerID, 1000);
+	}
 }
 
 void ts3plugin_onClientMoveSubscriptionEvent(uint64 serverConnectionHandlerID, anyID clientID, uint64 oldChannelID, uint64 newChannelID, int visibility) {
@@ -1008,7 +1015,9 @@ void ts3plugin_onMenuItemEvent(uint64 serverConnectionHandlerID, enum PluginMenu
 					break;
 				case MENU_ID_REFRESH_CONFIGURATION:
 					/* Menu global 2 was triggered */
-					Configured = false;
+					if (ChannelHasConfig) {
+						updateFromRemoteConfiguration(serverConnectionHandlerID);
+					}
 					break;
 				default:
 					break;
