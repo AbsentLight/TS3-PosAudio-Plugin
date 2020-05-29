@@ -756,6 +756,7 @@ void ts3plugin_onUpdateChannelEditedEvent(uint64 serverConnectionHandlerID, uint
 		ts3Functions.logMessage("Channel we are in was edited", LogLevel_INFO, "Plugin", serverConnectionHandlerID);
 
 		t.stop();
+
 		updateConfigFromChannelDescription(serverConnectionHandlerID, channelID);
 
 		if (ChannelHasConfig) {
@@ -766,9 +767,13 @@ void ts3plugin_onUpdateChannelEditedEvent(uint64 serverConnectionHandlerID, uint
 			update3dposition(serverConnectionHandlerID);
 
 			// Schedule updates on an interval
-			t.setInterval(&update3dposition, serverConnectionHandlerID, 1000);
+			t.setTimeout(&setIntervalForTimer, serverConnectionHandlerID, 5000);
 		}
 	}
+}
+
+void setIntervalForTimer(uint64 serverConnectionHandlerID) {
+	t.setInterval(&update3dposition, serverConnectionHandlerID, 1000/UpdatesPerSecond);
 }
 
 void ts3plugin_onUpdateClientEvent(uint64 serverConnectionHandlerID, anyID clientID, anyID invokerID, const char* invokerName, const char* invokerUniqueIdentifier) {
@@ -802,7 +807,7 @@ void ts3plugin_onClientMoveEvent(uint64 serverConnectionHandlerID, anyID clientI
 		update3dposition(serverConnectionHandlerID);
 
 		// Schedule updates on an interval
-		t.setInterval(&update3dposition, serverConnectionHandlerID, 1000);
+		t.setTimeout(&setIntervalForTimer, serverConnectionHandlerID, 5000);
 	}
 }
 
