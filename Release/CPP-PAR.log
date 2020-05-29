@@ -1,0 +1,62 @@
+﻿  plugin.cpp
+C:\Users\jonat\source\repos\TS3-PosAudio-Plugin\src\plugin.cpp(186,55): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\jonat\source\repos\TS3-PosAudio-Plugin\src\plugin.cpp(187,79): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\jonat\source\repos\TS3-PosAudio-Plugin\src\plugin.cpp(188,53): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\jonat\source\repos\TS3-PosAudio-Plugin\src\plugin.cpp(192,31): warning C4101: 'e': unreferenced local variable
+C:\Users\jonat\source\repos\TS3-PosAudio-Plugin\src\plugin.cpp(243,12): warning C4477: 'printf' : format string '%s' requires an argument of type 'char *', but variadic argument 1 has type 'std::string'
+C:\Users\jonat\source\repos\TS3-PosAudio-Plugin\src\plugin.cpp(243,12): warning C4477: 'printf' : format string '%s' requires an argument of type 'char *', but variadic argument 2 has type 'std::string'
+C:\Users\jonat\source\repos\TS3-PosAudio-Plugin\src\plugin.cpp(252,12): warning C4477: 'printf' : format string '%s' requires an argument of type 'char *', but variadic argument 1 has type 'std::string'
+C:\Users\jonat\source\repos\TS3-PosAudio-Plugin\src\plugin.cpp(252,12): warning C4477: 'printf' : format string '%s' requires an argument of type 'char *', but variadic argument 2 has type 'std::string'
+C:\Users\jonat\source\repos\TS3-PosAudio-Plugin\src\plugin.cpp(385,40): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\jonat\source\repos\TS3-PosAudio-Plugin\src\plugin.cpp(386,40): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\jonat\source\repos\TS3-PosAudio-Plugin\src\plugin.cpp(387,40): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\jonat\source\repos\TS3-PosAudio-Plugin\src\plugin.cpp(432,31): warning C4101: 'e': unreferenced local variable
+C:\Users\jonat\source\repos\TS3-PosAudio-Plugin\src\plugin.cpp(779,9): warning C4477: 'printf' : format string '%d' requires an argument of type 'int', but variadic argument 1 has type 'uint64'
+C:\Users\jonat\source\repos\TS3-PosAudio-Plugin\src\plugin.cpp(779,9): message : consider using '%lld' in the format string
+C:\Users\jonat\source\repos\TS3-PosAudio-Plugin\src\plugin.cpp(779,9): message : consider using '%I64d' in the format string
+C:\Users\jonat\source\repos\TS3-PosAudio-Plugin\src\plugin.cpp(779,9): warning C4477: 'printf' : format string '%d' requires an argument of type 'int', but variadic argument 3 has type 'uint64'
+C:\Users\jonat\source\repos\TS3-PosAudio-Plugin\src\plugin.cpp(779,9): message : consider using '%lld' in the format string
+C:\Users\jonat\source\repos\TS3-PosAudio-Plugin\src\plugin.cpp(779,9): message : consider using '%I64d' in the format string
+C:\Users\jonat\source\repos\TS3-PosAudio-Plugin\src\plugin.cpp(779,9): warning C4477: 'printf' : format string '%d' requires an argument of type 'int', but variadic argument 4 has type 'uint64'
+C:\Users\jonat\source\repos\TS3-PosAudio-Plugin\src\plugin.cpp(779,9): message : consider using '%lld' in the format string
+C:\Users\jonat\source\repos\TS3-PosAudio-Plugin\src\plugin.cpp(779,9): message : consider using '%I64d' in the format string
+C:\Users\jonat\source\repos\TS3-PosAudio-Plugin\src\plugin.cpp(970,11): warning C4101: 'myID': unreferenced local variable
+C:\Users\jonat\source\repos\TS3-PosAudio-Plugin\src\plugin.cpp(1063,4): warning C4065: switch statement contains 'default' but no 'case' labels
+cpprest_2_10.lib(uri.cpp.obj) : error LNK2038: mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MD_DynamicRelease' in plugin.obj
+cpprest_2_10.lib(http_msg.cpp.obj) : error LNK2038: mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MD_DynamicRelease' in plugin.obj
+cpprest_2_10.lib(http_client_msg.cpp.obj) : error LNK2038: mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MD_DynamicRelease' in plugin.obj
+cpprest_2_10.lib(http_client.cpp.obj) : error LNK2038: mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MD_DynamicRelease' in plugin.obj
+cpprest_2_10.lib(json.cpp.obj) : error LNK2038: mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MD_DynamicRelease' in plugin.obj
+cpprest_2_10.lib(uri_builder.cpp.obj) : error LNK2038: mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MD_DynamicRelease' in plugin.obj
+cpprest_2_10.lib(asyncrt_utils.cpp.obj) : error LNK2038: mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MD_DynamicRelease' in plugin.obj
+cpprest_2_10.lib(stdafx.cpp.obj) : error LNK2038: mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MD_DynamicRelease' in plugin.obj
+cpprest_2_10.lib(json_parsing.cpp.obj) : error LNK2038: mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MD_DynamicRelease' in plugin.obj
+cpprest_2_10.lib(http_compression.cpp.obj) : error LNK2038: mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MD_DynamicRelease' in plugin.obj
+cpprest_2_10.lib(http_helpers.cpp.obj) : error LNK2038: mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MD_DynamicRelease' in plugin.obj
+cpprest_2_10.lib(web_utilities.cpp.obj) : error LNK2038: mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MD_DynamicRelease' in plugin.obj
+cpprest_2_10.lib(oauth1.cpp.obj) : error LNK2038: mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MD_DynamicRelease' in plugin.obj
+cpprest_2_10.lib(http_client_winhttp.cpp.obj) : error LNK2038: mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MD_DynamicRelease' in plugin.obj
+cpprest_2_10.lib(json_serialization.cpp.obj) : error LNK2038: mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MD_DynamicRelease' in plugin.obj
+cpprest_2_10.lib(base64.cpp.obj) : error LNK2038: mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MD_DynamicRelease' in plugin.obj
+libcpmt.lib(locale0.obj) : error LNK2038: mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MD_DynamicRelease' in plugin.obj
+libcpmt.lib(locale.obj) : error LNK2038: mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MD_DynamicRelease' in plugin.obj
+libcpmt.lib(iosptrs.obj) : error LNK2038: mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MD_DynamicRelease' in plugin.obj
+libcpmt.lib(wlocale.obj) : error LNK2038: mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MD_DynamicRelease' in plugin.obj
+libcpmt.lib(xlocale.obj) : error LNK2038: mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MD_DynamicRelease' in plugin.obj
+libcpmt.lib(xlock.obj) : error LNK2038: mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MD_DynamicRelease' in plugin.obj
+libcpmt.lib(xstrcoll.obj) : error LNK2038: mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MD_DynamicRelease' in plugin.obj
+libcpmt.lib(xdateord.obj) : error LNK2038: mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MD_DynamicRelease' in plugin.obj
+libcpmt.lib(xwcscoll.obj) : error LNK2038: mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MD_DynamicRelease' in plugin.obj
+libcpmt.lib(xwcsxfrm.obj) : error LNK2038: mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MD_DynamicRelease' in plugin.obj
+libcpmt.lib(xstrxfrm.obj) : error LNK2038: mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MD_DynamicRelease' in plugin.obj
+libcpmt.lib(xmtx.obj) : error LNK2038: mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MD_DynamicRelease' in plugin.obj
+libcpmt.lib(StlCompareStringA.obj) : error LNK2038: mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MD_DynamicRelease' in plugin.obj
+libcpmt.lib(winapinls.obj) : error LNK2038: mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MD_DynamicRelease' in plugin.obj
+libcpmt.lib(StlCompareStringW.obj) : error LNK2038: mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MD_DynamicRelease' in plugin.obj
+libcpmt.lib(StlLCMapStringW.obj) : error LNK2038: mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MD_DynamicRelease' in plugin.obj
+libcpmt.lib(StlLCMapStringA.obj) : error LNK2038: mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MD_DynamicRelease' in plugin.obj
+libcpmt.lib(winapisupp.obj) : error LNK2038: mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MD_DynamicRelease' in plugin.obj
+     Creating library C:\Users\jonat\source\repos\TS3-PosAudio-Plugin\Release\CPP-PAR.lib and object C:\Users\jonat\source\repos\TS3-PosAudio-Plugin\Release\CPP-PAR.exp
+LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library
+MSVCRT.lib(exe_main.obj) : error LNK2001: unresolved external symbol _main
+C:\Users\jonat\source\repos\TS3-PosAudio-Plugin\Release\CPP-PAR.exe : fatal error LNK1120: 1 unresolved externals

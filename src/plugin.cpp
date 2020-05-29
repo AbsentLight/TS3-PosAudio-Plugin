@@ -767,7 +767,7 @@ void ts3plugin_onUpdateChannelEditedEvent(uint64 serverConnectionHandlerID, uint
 			update3dposition(serverConnectionHandlerID);
 
 			// Schedule updates on an interval
-			t.setTimeout(&setIntervalForTimer, serverConnectionHandlerID, 5000);
+			t.setTimeout(&setIntervalForTimer, serverConnectionHandlerID, 500);
 		}
 	}
 }
@@ -807,7 +807,7 @@ void ts3plugin_onClientMoveEvent(uint64 serverConnectionHandlerID, anyID clientI
 		update3dposition(serverConnectionHandlerID);
 
 		// Schedule updates on an interval
-		t.setTimeout(&setIntervalForTimer, serverConnectionHandlerID, 5000);
+		t.setTimeout(&setIntervalForTimer, serverConnectionHandlerID, 500);
 	}
 }
 
