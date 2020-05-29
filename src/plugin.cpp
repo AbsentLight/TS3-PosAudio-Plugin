@@ -787,10 +787,6 @@ void ts3plugin_onClientMoveEvent(uint64 serverConnectionHandlerID, anyID clientI
 		return;
 	}
 
-	if (clientID != myID) {
-		return;
-	}
-
 	printf("ts3plugin_onClientMoveEvent IDs: %d %d\n", myID, clientID);
 
 	cout << &t << endl;
@@ -800,17 +796,17 @@ void ts3plugin_onClientMoveEvent(uint64 serverConnectionHandlerID, anyID clientI
 		t.stop();
 		printf("CPP-POS: Kill timer\n");
 		updateConfigFromChannelDescription(serverConnectionHandlerID, newChannelID);
-	}
 
-	if (ChannelHasConfig) {
-		// Attempt to get new parameters from the remote
-		updateFromRemoteConfiguration(serverConnectionHandlerID);
+		if (ChannelHasConfig) {
+			// Attempt to get new parameters from the remote
+			updateFromRemoteConfiguration(serverConnectionHandlerID);
 
-		// Update the 3D positions of clients instantly
-		update3dposition(serverConnectionHandlerID);
+			// Update the 3D positions of clients instantly
+			update3dposition(serverConnectionHandlerID);
 
-		// Schedule updates on an interval
-		t.setTimeout(&setIntervalForTimer, serverConnectionHandlerID, 500);
+			// Schedule updates on an interval
+			t.setTimeout(&setIntervalForTimer, serverConnectionHandlerID, 500);
+		}
 	}
 }
 
