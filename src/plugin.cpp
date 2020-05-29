@@ -55,6 +55,7 @@ bool globallyEnabled = true;
 float RolloffOffset = 20.0f;
 float RolloffCutoff = 60.0f;
 float RolloffAttenuationCoefficient = 0.2f;
+bool CanHearUnregistered = true;
 
 int UpdatesPerSecond = 15;
 
@@ -100,6 +101,7 @@ void dpar_updateFromRemoteConfiguration(uint64 serverConnectionHandlerID) {
 		RolloffCutoff = jsonVal[L"cutoffDistance"].as_double();
 		RolloffAttenuationCoefficient = 1 / jsonVal[L"attenuationCoefficient"].as_double();
 		RolloffOffset = jsonVal[L"safeZoneSize"].as_double();
+		CanHearUnregistered = jsonVal[L"unregisteredCanBroadcast"].as_bool();
 
 		ts3Functions.logMessage("Successfully updated attenuation config from remote", LogLevel_INFO, "DPAR", serverConnectionHandlerID);
 	}
@@ -270,18 +272,41 @@ void dpar_update3Dposition(uint64 serverConnectionHandlerID) {
 		//While clientidlist[i] not null
 		for (int i = 0; clientidlist[i]; ++i) {
 
+			char* clientUID = NULL;
+			ts3Functions.getClientVariableAsString(serverConnectionHandlerID, clientidlist[i], CLIENT_UNIQUE_IDENTIFIER, &clientUID);
+			if (clientUID == NULL) {
+				return;
+			}
+			std::string clientstr(clientUID);
+			string_t clientid = conversions::to_string_t(clientstr);
+
+			if (jsonVal.size == 0) {
+
+				// If it's ourselves
+				if (localClientUID == clientstr) {
+					continue;
+				}
+
+				// If its someone else
+				TS3_VECTOR position;
+				position.x = 0.0f;
+				position.y = 0.0f;
+				position.z = 0.0f;
+
+				if (!CanHearUnregistered) {
+					position.y = -1024.0f;
+				}
+
+				ts3Functions.channelset3DAttributes(serverConnectionHandlerID, clientidlist[i], &position);
+
+				continue;
+			}
+
+
 			//Set cross matched users 3D positions
 			if (jsonVal[conversions::to_string_t(std::to_string(clientidlist[i]))] != NULL) {
 
-				char* clientUID = NULL;
-				ts3Functions.getClientVariableAsString(serverConnectionHandlerID, clientidlist[i], CLIENT_UNIQUE_IDENTIFIER, &clientUID);
-				if (clientUID == NULL) {
-					return;
-				}
-
-				std::string clientstr(clientUID);
-				string_t clientid = conversions::to_string_t(clientstr);
-
+				// We have data for a user and they're not the local user
 				if (jsonVal[clientid].is_array() && localClientUID != clientstr) {
 					json::array posArray = jsonVal[clientid].as_array();
 					TS3_VECTOR position;
@@ -299,7 +324,18 @@ void dpar_update3Dposition(uint64 serverConnectionHandlerID) {
 				}
 				else {
 					if (!jsonVal[clientid].is_array() && localClientUID != clientstr) {
-						//Player probably isn't registered.
+						//Player probably isn't registered
+						TS3_VECTOR position;
+						position.x = 0.0f;
+						position.y = 0.0f;
+						position.z = 0.0f;
+
+						if (!CanHearUnregistered) {
+							position.y = -1024.0f;
+						}					
+						
+						ts3Functions.channelset3DAttributes(serverConnectionHandlerID, clientidlist[i], &position);
+
 						printf("Player likely not registered. with id = %s\n", clientstr.c_str());
 					}
 					else if (localClientUID == clientstr) {
