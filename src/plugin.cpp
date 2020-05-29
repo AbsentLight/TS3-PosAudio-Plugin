@@ -271,7 +271,7 @@ void updateConfigFromChannelDescription(uint64 serverConnectionHandlerID, uint64
 }
 
 void update3dposition(uint64 serverConnectionHandlerID) {
-	printf("CPP-POS: Update position\n");
+	printf("CPP-POS: Update position");
 	bool enabled = globallyEnabled;
 
 	anyID id = NULL;
@@ -315,9 +315,9 @@ void update3dposition(uint64 serverConnectionHandlerID) {
 	center.z = 0.0f;
 
 	TS3_VECTOR forward;
-	forward.x = 0.0f;
+	forward.x = 1.0f;
 	forward.y = 0.0f;
-	forward.z = 1.0f;
+	forward.z = 0.0f;
 
 	TS3_VECTOR up;
 	up.x = 0.0f;
@@ -382,7 +382,7 @@ void update3dposition(uint64 serverConnectionHandlerID) {
 					json::array posArray = jsonVal[clientid].as_array();
 					TS3_VECTOR position;
 
-					printf("Setting position for %s to %f, %f, %f\n", clientstr.c_str(), posArray[0].as_double(), posArray[1].as_double(), posArray[2].as_double());
+					//printf("Setting position for %s to %f, %f, %f\n", clientstr.c_str(), posArray[0].as_double(), posArray[1].as_double(), posArray[2].as_double());
 					position.x = posArray[0].as_double();
 					position.y = posArray[1].as_double();
 					position.z = posArray[2].as_double();
@@ -423,8 +423,6 @@ void update3dposition(uint64 serverConnectionHandlerID) {
 				//free(&clientstr);
 				//free(&clientid);
 				//ts3Functions.freeMemory(clientUID);
-
-				printf("\n");
 			}
 		
 		}
@@ -779,11 +777,17 @@ void ts3plugin_onUpdateClientEvent(uint64 serverConnectionHandlerID, anyID clien
 
 void ts3plugin_onClientMoveEvent(uint64 serverConnectionHandlerID, anyID clientID, uint64 oldChannelID, uint64 newChannelID, int visibility, const char* moveMessage) {
 
+	
+
 	printf("ts3plugin_onClientMoveEvent: %d %d %d %d %d %s\n", serverConnectionHandlerID, clientID, oldChannelID, newChannelID, visibility, moveMessage);
 
 	anyID myID;
 	if (ts3Functions.getClientID(serverConnectionHandlerID, &myID) != ERROR_ok) {
 		ts3Functions.logMessage("Error querying client ID", LogLevel_ERROR, "Plugin", serverConnectionHandlerID);
+		return;
+	}
+
+	if (clientID != myID) {
 		return;
 	}
 
