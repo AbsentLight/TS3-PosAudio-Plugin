@@ -64,7 +64,7 @@ float RolloffOffset = 20.0f;
 float RolloffCutoff = 60.0f;
 float RolloffAttenuationCoefficient = 0.2f;
 
-int UpdatesPerSecond = 20;
+int UpdatesPerSecond = 10;
 
 std::string ServerHost = "wolfz.uk";
 std::string ServerPort = "9000";
@@ -184,7 +184,7 @@ void updateFromRemoteConfiguration(uint64 serverConnectionHandlerID) {
 		json::object jsonVal = response.extract_json().get().as_object();
 
 		RolloffCutoff = jsonVal[L"cutoffDistance"].as_double();
-		RolloffAttenuationCoefficient = jsonVal[L"attenuationCoefficient"].as_double();
+		RolloffAttenuationCoefficient = 1 / jsonVal[L"attenuationCoefficient"].as_double();
 		RolloffOffset = jsonVal[L"safeZoneSize"].as_double();
 
 		ts3Functions.logMessage("Successfully updated attenuation config from remote", LogLevel_INFO, "Plugin", serverConnectionHandlerID);
