@@ -26,10 +26,10 @@ PLUGINS_EXPORTDLL const char* ts3plugin_description();
 PLUGINS_EXPORTDLL void ts3plugin_setFunctionPointers(const struct TS3Functions funcs);
 PLUGINS_EXPORTDLL int ts3plugin_init();
 PLUGINS_EXPORTDLL void ts3plugin_shutdown();
-PLUGINS_EXPORTDLL void update3dposition(uint64);
-PLUGINS_EXPORTDLL void updateCurrentReportingServerConfig(utility::string_t, utility::string_t);
-PLUGINS_EXPORTDLL void updateConfigFromChannelDescription(uint64, uint64);
-PLUGINS_EXPORTDLL void setIntervalForTimer(uint64 serverConnectionHandlerID);
+PLUGINS_EXPORTDLL void dpar_update3Dposition(uint64);
+PLUGINS_EXPORTDLL void dpar_updateCurrentReportingServerConfig(utility::string_t, utility::string_t);
+PLUGINS_EXPORTDLL void dpar_updateConfigFromChannelDescription(uint64, uint64);
+PLUGINS_EXPORTDLL void dpar_setIntervalForTimer(uint64 serverConnectionHandlerID);
 
 /* Optional functions */
 PLUGINS_EXPORTDLL int ts3plugin_offersConfigure();
