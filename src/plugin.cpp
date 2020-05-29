@@ -402,8 +402,8 @@ void update3dposition(uint64 serverConnectionHandlerID) {
 						//TS user is player
 						json::array posArray = jsonVal[clientid].as_array();
 
-						double pitch = posArray[3].as_double();
-						double yaw = posArray[4].as_double();
+						double pitch = 0.0f;//posArray[3].as_double();
+						double yaw = posArray[4].as_double()+(3.14*1.5);
 
 						double xzLen = cos(pitch);
 						double x = xzLen * cos(yaw);
