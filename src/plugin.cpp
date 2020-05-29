@@ -147,6 +147,36 @@ string dpar_getMyClientUID(uint64 serverConnectionHandlerID) {
 	return meclientUIDstr;
 }
 
+void dpar_clientMoveEvent(uint64 serverConnectionHandlerID, anyID clientID, uint64 newChannelID) {
+
+	anyID myID;
+	if (ts3Functions.getClientID(serverConnectionHandlerID, &myID) != ERROR_ok) {
+		ts3Functions.logMessage("Error querying client ID", LogLevel_ERROR, "DPAR", serverConnectionHandlerID);
+		return;
+	}
+
+	printf("ts3plugin_onClientMoveEvent IDs: %d %d\n", myID, clientID);
+
+	cout << &t << endl;
+
+	if (myID == clientID) {
+		// We moved channel so should stop updating positions until we can establish the channel's config
+		t.stop();
+		printf("DPAR: Kill timer\n");
+		dpar_updateConfigFromChannelDescription(serverConnectionHandlerID, newChannelID);
+
+		if (ChannelHasConfig) {
+			// Attempt to get new parameters from the remote
+			dpar_updateFromRemoteConfiguration(serverConnectionHandlerID);
+
+			// Update the 3D positions of clients instantly
+			dpar_update3Dposition(serverConnectionHandlerID);
+
+			// Schedule updates on an interval
+			t.setTimeout(&dpar_setIntervalForTimer, serverConnectionHandlerID, 500);
+		}
+	}
+}
 
 void dpar_updateCurrentReportingServerConfig(std::string serverAddress, std::string serverPort) {
 	ServerHost = serverAddress;
@@ -720,43 +750,11 @@ void ts3plugin_onUpdateChannelEditedEvent(uint64 serverConnectionHandlerID, uint
 }
 
 void ts3plugin_onClientMoveEvent(uint64 serverConnectionHandlerID, anyID clientID, uint64 oldChannelID, uint64 newChannelID, int visibility, const char* moveMessage) {
-
-	
-
-	printf("ts3plugin_onClientMoveEvent: %d %d %d %d %d %s\n", serverConnectionHandlerID, clientID, oldChannelID, newChannelID, visibility, moveMessage);
-
-	anyID myID;
-	if (ts3Functions.getClientID(serverConnectionHandlerID, &myID) != ERROR_ok) {
-		ts3Functions.logMessage("Error querying client ID", LogLevel_ERROR, "DPAR", serverConnectionHandlerID);
-		return;
-	}
-
-	printf("ts3plugin_onClientMoveEvent IDs: %d %d\n", myID, clientID);
-
-	cout << &t << endl;
-
-	if (myID == clientID) {
-		// We moved channel so should stop updating positions until we can establish the channel's config
-		t.stop();
-		printf("DPAR: Kill timer\n");
-		dpar_updateConfigFromChannelDescription(serverConnectionHandlerID, newChannelID);
-
-		if (ChannelHasConfig) {
-			// Attempt to get new parameters from the remote
-			dpar_updateFromRemoteConfiguration(serverConnectionHandlerID);
-
-			// Update the 3D positions of clients instantly
-			dpar_update3Dposition(serverConnectionHandlerID);
-
-			// Schedule updates on an interval
-			t.setTimeout(&dpar_setIntervalForTimer, serverConnectionHandlerID, 500);
-		}
-	}
+	dpar_clientMoveEvent(serverConnectionHandlerID, clientID, newChannelID);
 }
 
 void ts3plugin_onClientMoveMovedEvent(uint64 serverConnectionHandlerID, anyID clientID, uint64 oldChannelID, uint64 newChannelID, int visibility, anyID moverID, const char* moverName, const char* moverUniqueIdentifier, const char* moveMessage) {
-	// TODO: Similar activations to ts3plugin_onClientMoveEvent
-	cout << "ts3plugin_onClientMoveMovedEvent" << endl;
+	dpar_clientMoveEvent(serverConnectionHandlerID, clientID, newChannelID);
 }
 
 int ts3plugin_onServerErrorEvent(uint64 serverConnectionHandlerID, const char* errorMessage, unsigned int error, const char* returnCode, const char* extraMessage) {
@@ -772,7 +770,18 @@ int ts3plugin_onServerErrorEvent(uint64 serverConnectionHandlerID, const char* e
 }
 
 void ts3plugin_onChannelDescriptionUpdateEvent(uint64 serverConnectionHandlerID, uint64 channelID) {
-	// TODO: Update config from updated channel if currently in that channel
+
+	uint64 currentChannelID = dpar_getMyCurrentChannel(serverConnectionHandlerID);
+
+	if (channelID == currentChannelID) {
+		// Attempt to update the remote host details from description
+		dpar_updateConfigFromChannelDescription(serverConnectionHandlerID, channelID);
+
+		if (ChannelHasConfig) {
+			// Attempt to update config from the remote host
+			dpar_updateFromRemoteConfiguration(serverConnectionHandlerID);
+		}
+	}
 	cout << "ts3plugin_onChannelDescriptionUpdateEvent" << endl;
 }
 
