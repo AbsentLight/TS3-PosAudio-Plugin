@@ -169,6 +169,11 @@ int ts3plugin_init() {
 	 * For normal case, if a plugin really failed to load because of an error, the correct return value is 1. */
 }
 
+void setIntervalForTimer(uint64 serverConnectionHandlerID) {
+	printf("CPP-POS: Restart timer\n");
+	t.setInterval(&update3dposition, serverConnectionHandlerID, 1000 / UpdatesPerSecond);
+}
+
 void updateFromRemoteConfiguration(uint64 serverConnectionHandlerID) {
 	ts3Functions.logMessage("Attempting to get attenuation config from remote", LogLevel_INFO, "Plugin", serverConnectionHandlerID);
 
@@ -184,7 +189,7 @@ void updateFromRemoteConfiguration(uint64 serverConnectionHandlerID) {
 		json::object jsonVal = response.extract_json().get().as_object();
 
 		RolloffCutoff = jsonVal[L"cutoffDistance"].as_double();
-		RolloffAttenuationCoefficient = jsonVal[L"attenuationCoefficient"].as_double();
+		RolloffAttenuationCoefficient = 1/jsonVal[L"attenuationCoefficient"].as_double();
 		RolloffOffset = jsonVal[L"safeZoneSize"].as_double();
 
 		ts3Functions.logMessage("Successfully updated attenuation config from remote", LogLevel_INFO, "Plugin", serverConnectionHandlerID);
@@ -266,12 +271,8 @@ void updateConfigFromChannelDescription(uint64 serverConnectionHandlerID, uint64
 }
 
 void update3dposition(uint64 serverConnectionHandlerID) {
-
-	bool enabled = true;
-
-	if (!globallyEnabled) {
-		enabled = false;
-	}
+	printf("CPP-POS: Update position\n");
+	bool enabled = globallyEnabled;
 
 	anyID id = NULL;
 	ts3Functions.getClientID(serverConnectionHandlerID, &id);
@@ -756,6 +757,7 @@ void ts3plugin_onUpdateChannelEditedEvent(uint64 serverConnectionHandlerID, uint
 		ts3Functions.logMessage("Channel we are in was edited", LogLevel_INFO, "Plugin", serverConnectionHandlerID);
 
 		t.stop();
+		printf("CPP-POS: Kill timer\n");
 
 		updateConfigFromChannelDescription(serverConnectionHandlerID, channelID);
 
@@ -770,10 +772,6 @@ void ts3plugin_onUpdateChannelEditedEvent(uint64 serverConnectionHandlerID, uint
 			t.setTimeout(&setIntervalForTimer, serverConnectionHandlerID, 500);
 		}
 	}
-}
-
-void setIntervalForTimer(uint64 serverConnectionHandlerID) {
-	t.setInterval(&update3dposition, serverConnectionHandlerID, 1000/UpdatesPerSecond);
 }
 
 void ts3plugin_onUpdateClientEvent(uint64 serverConnectionHandlerID, anyID clientID, anyID invokerID, const char* invokerName, const char* invokerUniqueIdentifier) {
@@ -796,6 +794,7 @@ void ts3plugin_onClientMoveEvent(uint64 serverConnectionHandlerID, anyID clientI
 	if (myID == clientID) {
 		// We moved channel so should stop updating positions until we can establish the channel's config
 		t.stop();
+		printf("CPP-POS: Kill timer\n");
 		updateConfigFromChannelDescription(serverConnectionHandlerID, newChannelID);
 	}
 
@@ -950,6 +949,7 @@ void ts3plugin_onCustom3dRolloffCalculationClientEvent(uint64 serverConnectionHa
 		*volume = v;
 	}
 
+
 	strdistance.erase();
 	strvolume.erase();
 }
@@ -1025,10 +1025,12 @@ void ts3plugin_onMenuItemEvent(uint64 serverConnectionHandlerID, enum PluginMenu
 				case MENU_ID_GLOBAL_ENABLE:
 					/* Menu global 1 was triggered */
 					globallyEnabled = true;
+					printf("CPP-POS: Enable\n");
 					break;
 				case MENU_ID_GLOBAL_DISABLE:
 					/* Menu global 2 was triggered */
 					globallyEnabled = false;
+					printf("CPP-POS: Disable\n");
 					break;
 				case MENU_ID_REFRESH_CONFIGURATION:
 					/* Menu global 2 was triggered */

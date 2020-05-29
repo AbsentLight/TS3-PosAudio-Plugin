@@ -16,11 +16,8 @@ class Timer {
 };
 
 void Timer::setTimeout(void (*function)(uint64), uint64 id, int delay) {
-    this->clear = false;
     std::thread t([=]() {
-        if(this->clear) return;
         std::this_thread::sleep_for(std::chrono::milliseconds(delay));
-        if(this->clear) return;
         function(id);
     });
     t.detach();
