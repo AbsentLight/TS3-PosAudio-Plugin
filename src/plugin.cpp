@@ -280,7 +280,7 @@ void dpar_update3Dposition(uint64 serverConnectionHandlerID) {
 			std::string clientstr(clientUID);
 			string_t clientid = conversions::to_string_t(clientstr);
 
-			if (jsonVal.size == 0) {
+			if (jsonVal.size() == 0) {
 
 				// If it's ourselves
 				if (localClientUID == clientstr) {
