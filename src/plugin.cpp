@@ -64,7 +64,7 @@ float RolloffOffset = 20.0f;
 float RolloffCutoff = 60.0f;
 float RolloffAttenuationCoefficient = 0.2f;
 
-int UpdatesPerSecond = 10;
+int UpdatesPerSecond = 2;
 
 std::string ServerHost = "wolfz.uk";
 std::string ServerPort = "9000";
@@ -812,30 +812,39 @@ void ts3plugin_onClientMoveEvent(uint64 serverConnectionHandlerID, anyID clientI
 }
 
 void ts3plugin_onClientMoveSubscriptionEvent(uint64 serverConnectionHandlerID, anyID clientID, uint64 oldChannelID, uint64 newChannelID, int visibility) {
+	cout << "ts3plugin_onClientMoveSubscriptionEvent" << endl;
 }
 
 void ts3plugin_onClientMoveTimeoutEvent(uint64 serverConnectionHandlerID, anyID clientID, uint64 oldChannelID, uint64 newChannelID, int visibility, const char* timeoutMessage) {
+	cout << "ts3plugin_onClientMoveTimeoutEvent" << endl;
 }
 
 void ts3plugin_onClientMoveMovedEvent(uint64 serverConnectionHandlerID, anyID clientID, uint64 oldChannelID, uint64 newChannelID, int visibility, anyID moverID, const char* moverName, const char* moverUniqueIdentifier, const char* moveMessage) {
+	cout << "ts3plugin_onClientMoveMovedEvent" << endl;
 }
 
 void ts3plugin_onClientKickFromChannelEvent(uint64 serverConnectionHandlerID, anyID clientID, uint64 oldChannelID, uint64 newChannelID, int visibility, anyID kickerID, const char* kickerName, const char* kickerUniqueIdentifier, const char* kickMessage) {
+	cout << "ts3plugin_onClientKickFromChannelEvent" << endl;
 }
 
 void ts3plugin_onClientKickFromServerEvent(uint64 serverConnectionHandlerID, anyID clientID, uint64 oldChannelID, uint64 newChannelID, int visibility, anyID kickerID, const char* kickerName, const char* kickerUniqueIdentifier, const char* kickMessage) {
+	cout << "ts3plugin_onClientKickFromServerEvent" << endl;
 }
 
 void ts3plugin_onClientIDsEvent(uint64 serverConnectionHandlerID, const char* uniqueClientIdentifier, anyID clientID, const char* clientName) {
+	cout << "ts3plugin_onClientIDsEvent" << endl;
 }
 
 void ts3plugin_onClientIDsFinishedEvent(uint64 serverConnectionHandlerID) {
+	cout << "ts3plugin_onClientIDsFinishedEvent" << endl;
 }
 
 void ts3plugin_onServerEditedEvent(uint64 serverConnectionHandlerID, anyID editerID, const char* editerName, const char* editerUniqueIdentifier) {
+	cout << "ts3plugin_onServerEditedEvent" << endl;
 }
 
 void ts3plugin_onServerUpdatedEvent(uint64 serverConnectionHandlerID) {
+	cout << "ts3plugin_onServerUpdatedEvent" << endl;
 }
 
 int ts3plugin_onServerErrorEvent(uint64 serverConnectionHandlerID, const char* errorMessage, unsigned int error, const char* returnCode, const char* extraMessage) {
@@ -848,9 +857,6 @@ int ts3plugin_onServerErrorEvent(uint64 serverConnectionHandlerID, const char* e
 		return 1;
 	}
 	return 0;  /* If no plugin return code was used, the return value of this function is ignored */
-}
-
-void ts3plugin_onServerStopEvent(uint64 serverConnectionHandlerID, const char* shutdownMessage) {
 }
 
 int ts3plugin_onTextMessageEvent(uint64 serverConnectionHandlerID, anyID targetMode, anyID toID, anyID fromID, const char* fromName, const char* fromUniqueIdentifier, const char* message, int ffIgnored) {
@@ -892,9 +898,11 @@ void ts3plugin_onServerConnectionInfoEvent(uint64 serverConnectionHandlerID) {
 }
 
 void ts3plugin_onChannelSubscribeEvent(uint64 serverConnectionHandlerID, uint64 channelID) {
+	cout << "ts3plugin_onChannelSubscribeEvent" << endl;
 }
 
 void ts3plugin_onChannelSubscribeFinishedEvent(uint64 serverConnectionHandlerID) {
+	cout << "ts3plugin_onChannelSubscribeFinishedEvent" << endl;
 }
 
 void ts3plugin_onChannelUnsubscribeEvent(uint64 serverConnectionHandlerID, uint64 channelID) {
@@ -904,6 +912,7 @@ void ts3plugin_onChannelUnsubscribeFinishedEvent(uint64 serverConnectionHandlerI
 }
 
 void ts3plugin_onChannelDescriptionUpdateEvent(uint64 serverConnectionHandlerID, uint64 channelID) {
+	cout << "ts3plugin_onChannelDescriptionUpdateEvent" << endl;
 }
 
 void ts3plugin_onChannelPasswordChangedEvent(uint64 serverConnectionHandlerID, uint64 channelID) {
