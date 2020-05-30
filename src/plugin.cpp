@@ -337,14 +337,25 @@ void dpar_update3Dposition(uint64 serverConnectionHandlerID) {
 			if (jsonVal[conversions::to_string_t(std::to_string(clientidlist[i]))] != NULL) {
 
 				// We have data for a user and they're not the local user
-				if (jsonVal[clientid].is_array() && localClientUID != clientstr) {
-					json::array posArray = jsonVal[clientid].as_array();
-					TS3_VECTOR position;
+				if (jsonVal[clientid].is_object() && localClientUID != clientstr) {
 
+
+
+					TS3_VECTOR position;
 					//printf("Setting position for %s to %f, %f, %f\n", clientstr.c_str(), posArray[0].as_double(), posArray[1].as_double(), posArray[2].as_double());
-					position.x = -1 * posArray[0].as_double();
-					position.y = posArray[1].as_double();
-					position.z = posArray[2].as_double();
+
+					if (jsonVal[clientid][L"channel"][L"mode"].as_string() == U("local")) {
+						position.x = -1 * jsonVal[clientid][L"pos"][L"x"].as_double();
+						position.y = jsonVal[clientid][L"pos"][L"y"].as_double() + (RolloffCutoff * 4 * jsonVal[clientid][L"channel"][L"id"].as_double());
+						position.z = jsonVal[clientid][L"pos"][L"z"].as_double();
+					}
+					else {
+						position.x = 0.0f;
+						position.y = RolloffCutoff * 4 * jsonVal[clientid][L"channel"][L"id"].as_double();
+						position.z = 0.0f;
+					}
+
+					
 
 					ts3Functions.channelset3DAttributes(serverConnectionHandlerID, clientidlist[i], &position);
 
@@ -353,7 +364,7 @@ void dpar_update3Dposition(uint64 serverConnectionHandlerID) {
 					//free(&up);
 				}
 				else {
-					if (!jsonVal[clientid].is_array() && localClientUID != clientstr) {
+					if (!jsonVal[clientid].is_object() && localClientUID != clientstr) {
 						//Player probably isn't registered
 						TS3_VECTOR position;
 						position.x = 0.0f;
@@ -370,10 +381,9 @@ void dpar_update3Dposition(uint64 serverConnectionHandlerID) {
 					}
 					else if (localClientUID == clientstr) {
 						//TS user is player
-						json::array posArray = jsonVal[clientid].as_array();
 
 						double pitch = 0.0f;//posArray[3].as_double();
-						double yaw = posArray[4].as_double() + (3.14 * 1.5);
+						double yaw = jsonVal[clientid][L"rot"][L"yaw"].as_double() + (3.14 * 1.5);
 
 						double xzLen = cos(pitch);
 						double x = xzLen * cos(yaw);
@@ -384,6 +394,8 @@ void dpar_update3Dposition(uint64 serverConnectionHandlerID) {
 						new_forward.x = (float)x;
 						new_forward.y = (float)y;
 						new_forward.z = (float)z;
+
+						center.y = RolloffCutoff * 4 * jsonVal[clientid][L"channel"][L"id"].as_double();
 
 						ts3Functions.systemset3DSettings(serverConnectionHandlerID, 1.0f, 1.0f);
 						ts3Functions.systemset3DListenerAttributes(serverConnectionHandlerID, &center, &new_forward, &up);
@@ -421,7 +433,7 @@ const char* ts3plugin_name() {
 
 /* Plugin version */
 const char* ts3plugin_version() {
-    return "1.0";
+    return "1.0.VC-BETA3";
 }
 
 /* Plugin API version. Must be the same as the clients API major version, else the plugin fails to load. */
