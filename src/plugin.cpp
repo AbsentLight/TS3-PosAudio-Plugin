@@ -383,7 +383,7 @@ void update3dposition(uint64 serverConnectionHandlerID) {
 					TS3_VECTOR position;
 
 					//printf("Setting position for %s to %f, %f, %f\n", clientstr.c_str(), posArray[0].as_double(), posArray[1].as_double(), posArray[2].as_double());
-					position.x = posArray[0].as_double();
+					position.x = -posArray[0].as_double();
 					position.y = posArray[1].as_double();
 					position.z = posArray[2].as_double();
 
