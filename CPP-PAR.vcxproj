@@ -91,7 +91,7 @@
       <AdditionalDependencies>bcrypt.lib;winhttp.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy /y $(ProjectDir)x64\Release\CPP-PAR.dll %APPDATA%\TS3Client\plugins\CPP-PAR.dll &amp;&amp; "C:\Program Files\TeamSpeak 3 Client\ts3client_win64.exe" -console &amp;&amp; pause</Command>
+      <Command>copy /y $(ProjectDir)x64\Release\CPP-PAR.dll %APPDATA%\TS3Client\plugins\DPAR_win64.dll &amp;&amp; "C:\Program Files\TeamSpeak 3 Client\ts3client_win64.exe" -console &amp;&amp; pause</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
