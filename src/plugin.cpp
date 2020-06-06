@@ -248,26 +248,6 @@ void dpar_update3Dposition(uint64 serverConnectionHandlerID) {
 
 	printf("DPAR: Update position\n");
 
-	//The following resets the clients positions - this is needed for when positional audio is not being used
-	//This is the default even if the later code times out
-	for (int i = 0; clientidlist[i]; ++i) {
-		char* clientUID = NULL;
-		ts3Functions.getClientVariableAsString(serverConnectionHandlerID, clientidlist[i], CLIENT_UNIQUE_IDENTIFIER, &clientUID);
-		if (clientUID == NULL) {
-			return;
-		}
-
-		std::string clientstr(clientUID);
-		string_t clientid = conversions::to_string_t(clientstr);
-
-		TS3_VECTOR position;
-
-		position.x = 0.0f;
-		position.y = 0.0f;
-		position.z = 0.0f;
-		ts3Functions.channelset3DAttributes(serverConnectionHandlerID, clientidlist[i], &position);
-	}
-
 	// Create http_client to send the request.
 	const std::string candidateUri = "http://" + ServerHost + ":" + ServerPort + "";
 
@@ -280,10 +260,9 @@ void dpar_update3Dposition(uint64 serverConnectionHandlerID) {
 		uri_builder builder(U("/request"));
 		builder.append_query(U("id"), conversions::to_string_t(localClientUID)); //May turn the pointer to a string not the ID.... std::to_string(*id)
 		http_response response = client.request(methods::GET, builder.to_string()).get();
-
+		
 		//Parse network response
 		json::object responseJson = response.extract_json().get().as_object();
-
 
 		json::object flags = responseJson[L"flags"].as_object();
 
@@ -334,15 +313,13 @@ void dpar_update3Dposition(uint64 serverConnectionHandlerID) {
 				// We have data for a user and they're not the local user
 				if (playerData[clientid].is_object() && localClientUID != clientstr) {
 
-
-
 					TS3_VECTOR position;
 					//printf("Setting position for %s to %f, %f, %f\n", clientstr.c_str(), posArray[0].as_double(), posArray[1].as_double(), posArray[2].as_double());
 
 					// Modifier added onto y-pos to simulate channels by placing clients vertically about each other
-					double channel_y_mod = RolloffCutoff * 4 * playerData[clientid][L"channel"][L"id"].as_double();
+					double channel_y_mod = RolloffCutoff * 4 * playerData[clientid][L"ch"][L"id"].as_double();
 
-					if (playerData[clientid][L"channel"][L"mode"].as_string() == U("local")) {
+					if (playerData[clientid][L"ch"][L"mode"].as_string() == U("local")) {
 						position.x = -1 * playerData[clientid][L"pos"][L"x"].as_double();
 						position.y = playerData[clientid][L"pos"][L"y"].as_double() + channel_y_mod;
 						position.z = playerData[clientid][L"pos"][L"z"].as_double();
@@ -352,8 +329,6 @@ void dpar_update3Dposition(uint64 serverConnectionHandlerID) {
 						position.y = channel_y_mod;
 						position.z = 0.0f;
 					}
-
-					
 
 					ts3Functions.channelset3DAttributes(serverConnectionHandlerID, clientidlist[i], &position);
 
@@ -381,7 +356,7 @@ void dpar_update3Dposition(uint64 serverConnectionHandlerID) {
 						//TS user is player
 
 						double pitch = 0.0f;//Pitch isn't sent as it isn't useful in the calculation below - pitch only makes sense when combined with roll which isn't present
-						double yaw = playerData[clientid][L"r"][L"y"].as_double() + (3.14 * 1.5);//r is shortened rotation, y is shortened yaw
+						double yaw = playerData[clientid][L"rot"][L"y"].as_double() + (3.14 * 1.5);//r is shortened rotation, y is shortened yaw
 
 						double xzLen = cos(pitch);
 						double x = xzLen * cos(yaw);
@@ -410,6 +385,26 @@ void dpar_update3Dposition(uint64 serverConnectionHandlerID) {
 	}
 	catch (const std::exception& e) {
 		printf("An error occured or the connection timed out\n");
+
+		//The following resets the clients positions - this is needed for when positional audio is not being used
+		for (int i = 0; clientidlist[i]; ++i) {
+			char* clientUID = NULL;
+			ts3Functions.getClientVariableAsString(serverConnectionHandlerID, clientidlist[i], CLIENT_UNIQUE_IDENTIFIER, &clientUID);
+			if (clientUID == NULL) {
+				return;
+			}
+
+
+			std::string clientstr(clientUID);
+			string_t clientid = conversions::to_string_t(clientstr);
+
+			TS3_VECTOR position;
+
+			position.x = 0.0f;
+			position.y = 0.0f;
+			position.z = 0.0f;
+			ts3Functions.channelset3DAttributes(serverConnectionHandlerID, clientidlist[i], &position);
+		}
 	}
 
 	//free(&client);
