@@ -50,8 +50,6 @@ static struct TS3Functions ts3Functions;
 
 static char* pluginID = NULL;
 
-bool globallyEnabled = true;
-
 float RolloffOffset = 20.0f;
 float RolloffCutoff = 60.0f;
 float RolloffAttenuationCoefficient = 0.2f;
@@ -72,16 +70,6 @@ Timer t;
 void dpar_setIntervalForTimer(uint64 serverConnectionHandlerID) {
 	ts3Functions.logMessage("Restarting Timer (dpar_setIntervalForTimer)", LogLevel_DEBUG, "DPAR", serverConnectionHandlerID);
 	t.setInterval(&dpar_update3Dposition, serverConnectionHandlerID, 1000 / UpdatesPerSecond);
-}
-
-void dpar_onPluginEnable(uint64 serverConnectionHandlerID) {
-	globallyEnabled = true;
-	ts3Functions.logMessage("Positional audio enabled", LogLevel_INFO, "DPAR", serverConnectionHandlerID);
-}
-
-void dpar_onPluginDisable(uint64 serverConnectionHandlerID) {
-	globallyEnabled = false;
-	ts3Functions.logMessage("Positional audio disabled", LogLevel_INFO, "DPAR", serverConnectionHandlerID);
 }
 
 void dpar_updateFromRemoteConfiguration(uint64 serverConnectionHandlerID) {
@@ -233,7 +221,6 @@ void dpar_updateConfigFromChannelDescription(uint64 serverConnectionHandlerID, u
 
 void dpar_update3Dposition(uint64 serverConnectionHandlerID) {
 	printf("DPAR: Update position\n");
-	bool enabled = globallyEnabled;
 
 	uint64 currentChannelID = dpar_getMyCurrentChannel(serverConnectionHandlerID);
 
@@ -256,38 +243,30 @@ void dpar_update3Dposition(uint64 serverConnectionHandlerID) {
 	center.y = 0.0f;
 	center.z = 0.0f;
 
-	//TS3_VECTOR forward;
-	//forward.x = 0.0f;
-	//forward.y = 0.0f;
-	//forward.z = 1.0f;
-
 	TS3_VECTOR up;
 	up.x = 0.0f;
 	up.y = 1.0f;
 	up.z = 0.0f;
 
-	if (!enabled) {
-		//While clientidlist[i] not null
-		for (int i = 0; clientidlist[i]; ++i) {
-			char* clientUID = NULL;
-			ts3Functions.getClientVariableAsString(serverConnectionHandlerID, clientidlist[i], CLIENT_UNIQUE_IDENTIFIER, &clientUID);
-			if (clientUID == NULL) {
-				return;
-			}
-
-			std::string clientstr(clientUID);
-			string_t clientid = conversions::to_string_t(clientstr);
-
-			TS3_VECTOR position;
-
-			position.x = 0.0f;
-			position.y = 0.0f;
-			position.z = 0.0f;
-			ts3Functions.channelset3DAttributes(serverConnectionHandlerID, clientidlist[i], &position);
+	//While clientidlist[i] not null
+	for (int i = 0; clientidlist[i]; ++i) {
+		char* clientUID = NULL;
+		ts3Functions.getClientVariableAsString(serverConnectionHandlerID, clientidlist[i], CLIENT_UNIQUE_IDENTIFIER, &clientUID);
+		if (clientUID == NULL) {
+			return;
 		}
-		printf("POS Audio Disabled\n");
-		return;
+
+		std::string clientstr(clientUID);
+		string_t clientid = conversions::to_string_t(clientstr);
+
+		TS3_VECTOR position;
+
+		position.x = 0.0f;
+		position.y = 0.0f;
+		position.z = 0.0f;
+		ts3Functions.channelset3DAttributes(serverConnectionHandlerID, clientidlist[i], &position);
 	}
+	return;
 
 	// Create http_client to send the request.
 	const std::string candidateUri = "http://" + ServerHost + ":" + ServerPort + "";
@@ -303,7 +282,17 @@ void dpar_update3Dposition(uint64 serverConnectionHandlerID) {
 		http_response response = client.request(methods::GET, builder.to_string()).get();
 
 		//Parse network response
-		json::object jsonVal = response.extract_json().get().as_object();
+		json::object responseJson = response.extract_json().get().as_object();
+
+
+		json::object flags = responseJson[L"flags"].as_object();
+
+		//Check flags
+		if (flags[L"hasConfigUpdate"].as_bool()) {
+			dpar_updateFromRemoteConfiguration(serverConnectionHandlerID);
+		}
+
+		json::object playerData = responseJson[L"players"].as_object();
 
 		//While clientidlist[i] not null
 		for (int i = 0; clientidlist[i]; ++i) {
@@ -316,7 +305,7 @@ void dpar_update3Dposition(uint64 serverConnectionHandlerID) {
 			std::string clientstr(clientUID);
 			string_t clientid = conversions::to_string_t(clientstr);
 
-			if (jsonVal.size() == 0) {
+			if (playerData.size() == 0) {
 
 				// If it's ourselves
 				if (localClientUID == clientstr) {
@@ -340,24 +329,24 @@ void dpar_update3Dposition(uint64 serverConnectionHandlerID) {
 
 
 			//Set cross matched users 3D positions
-			if (jsonVal[conversions::to_string_t(std::to_string(clientidlist[i]))] != NULL) {
+			if (playerData[conversions::to_string_t(std::to_string(clientidlist[i]))] != NULL) {
 
 				// We have data for a user and they're not the local user
-				if (jsonVal[clientid].is_object() && localClientUID != clientstr) {
+				if (playerData[clientid].is_object() && localClientUID != clientstr) {
 
 
 
 					TS3_VECTOR position;
 					//printf("Setting position for %s to %f, %f, %f\n", clientstr.c_str(), posArray[0].as_double(), posArray[1].as_double(), posArray[2].as_double());
 
-					if (jsonVal[clientid][L"channel"][L"mode"].as_string() == U("local")) {
-						position.x = -1 * jsonVal[clientid][L"pos"][L"x"].as_double();
-						position.y = jsonVal[clientid][L"pos"][L"y"].as_double() + (RolloffCutoff * 4 * jsonVal[clientid][L"channel"][L"id"].as_double());
-						position.z = jsonVal[clientid][L"pos"][L"z"].as_double();
+					if (playerData[clientid][L"channel"][L"mode"].as_string() == U("local")) {
+						position.x = -1 * playerData[clientid][L"pos"][L"x"].as_double();
+						position.y = playerData[clientid][L"pos"][L"y"].as_double() + (RolloffCutoff * 4 * playerData[clientid][L"channel"][L"id"].as_double());
+						position.z = playerData[clientid][L"pos"][L"z"].as_double();
 					}
 					else {
 						position.x = 0.0f;
-						position.y = RolloffCutoff * 4 * jsonVal[clientid][L"channel"][L"id"].as_double();
+						position.y = RolloffCutoff * 4 * playerData[clientid][L"channel"][L"id"].as_double();
 						position.z = 0.0f;
 					}
 
@@ -370,7 +359,7 @@ void dpar_update3Dposition(uint64 serverConnectionHandlerID) {
 					//free(&up);
 				}
 				else {
-					if (!jsonVal[clientid].is_object() && localClientUID != clientstr) {
+					if (!playerData[clientid].is_object() && localClientUID != clientstr) {
 						//Player probably isn't registered
 						TS3_VECTOR position;
 						position.x = 0.0f;
@@ -388,8 +377,8 @@ void dpar_update3Dposition(uint64 serverConnectionHandlerID) {
 					else if (localClientUID == clientstr) {
 						//TS user is player
 
-						double pitch = 0.0f;//posArray[3].as_double();
-						double yaw = jsonVal[clientid][L"rot"][L"yaw"].as_double() + (3.14 * 1.5);
+						double pitch = 0.0f;//Pitch isn't sent as it isn't useful in the calculation below - pitch only makes sense when combined with roll which isn't present
+						double yaw = playerData[clientid][L"r"][L"y"].as_double() + (3.14 * 1.5);//r is shortened rotation, y is shortened yaw
 
 						double xzLen = cos(pitch);
 						double x = xzLen * cos(yaw);
@@ -401,7 +390,7 @@ void dpar_update3Dposition(uint64 serverConnectionHandlerID) {
 						new_forward.y = (float)y;
 						new_forward.z = (float)z;
 
-						center.y = RolloffCutoff * 4 * jsonVal[clientid][L"channel"][L"id"].as_double();
+						center.y = RolloffCutoff * 4 * playerData[clientid][L"ch"][L"id"].as_double();
 
 						ts3Functions.systemset3DSettings(serverConnectionHandlerID, 1.0f, 1.0f);
 						ts3Functions.systemset3DListenerAttributes(serverConnectionHandlerID, &center, &new_forward, &up);
@@ -611,11 +600,7 @@ void ts3plugin_initMenus(struct PluginMenuItem*** menuItems, char** menuIcon) {
 	 * e.g. for "test_plugin.dll", icon "1.png" is loaded from <TeamSpeak 3 Client install dir>\plugins\test_plugin\1.png
 	 */
 
-	BEGIN_CREATE_MENUS(3);  /* IMPORTANT: Number of menu items must be correct! */
-	//CREATE_MENU_ITEM(PLUGIN_MENU_TYPE_CHANNEL, MENU_ID_CHANNEL_ENABLE, "Enable on this channel", "1.png");
-	//CREATE_MENU_ITEM(PLUGIN_MENU_TYPE_CHANNEL, MENU_ID_CHANNEL_DISABLE, "Disable on this channel", "2.png");
-	CREATE_MENU_ITEM(PLUGIN_MENU_TYPE_GLOBAL,  MENU_ID_GLOBAL_ENABLE,  "Enable Globally",  "1.png");
-	CREATE_MENU_ITEM(PLUGIN_MENU_TYPE_GLOBAL,  MENU_ID_GLOBAL_DISABLE,  "Disable Globally",  "2.png");
+	BEGIN_CREATE_MENUS(1);  /* IMPORTANT: Number of menu items must be correct! */
 	CREATE_MENU_ITEM(PLUGIN_MENU_TYPE_GLOBAL, MENU_ID_REFRESH_CONFIGURATION, "Refresh configuration", "3.png");
 	END_CREATE_MENUS;  /* Includes an assert checking if the number of menu items matched */
 
@@ -859,14 +844,6 @@ void ts3plugin_onMenuItemEvent(uint64 serverConnectionHandlerID, enum PluginMenu
 		case PLUGIN_MENU_TYPE_GLOBAL:
 			/* Global menu item was triggered. selectedItemID is unused and set to zero. */
 			switch(menuItemID) {
-				case MENU_ID_GLOBAL_ENABLE:
-					/* Menu global 1 was triggered */
-					dpar_onPluginEnable(serverConnectionHandlerID);
-					break;
-				case MENU_ID_GLOBAL_DISABLE:
-					/* Menu global 2 was triggered */
-					dpar_onPluginDisable(serverConnectionHandlerID);
-					break;
 				case MENU_ID_REFRESH_CONFIGURATION:
 					/* Menu global 2 was triggered */
 					if (ChannelHasConfig) {
