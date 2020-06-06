@@ -13,16 +13,15 @@ This is the Teamspeak client plugin for use with [MC-PosAudio-Plugin](https://gi
 4.You can now open this project in Visual Studio by opening the .sln file, the cpprest library should be linked as all other configurations should already be reflected in the project. 
 
 ### Configuring the plugin:
-You'll need to set up a Bukkit/Bukkit plugin compatible server running the [MC-PosAudio-Plugin](https://github.com/AbsentLight/MC-PosAudio-Plugin), once you've got that you need to point the below line at the address of the minecraft server e.g. alter `192.168.2.58` to be the address of the server, you can find the line in `plugin.cpp`.
+You'll need to set up a Bukkit/Bukkit plugin compatible server running the [MC-PosAudio-Plugin](https://github.com/AbsentLight/MC-PosAudio-Plugin), once you've got that you need to alter the channel in Teamspeak you want to use with positional audio with the following as a description (preserve the pipes, replace everything inside and including the less/greater than symbols with values based on your server configuration):
 
-```web::http::client::http_client client(U("http://192.168.2.58:9000/request"));```
+    |<url/ip>|<port>|
 
-Once you've updated the above line you can build the solution and the plugin dll should get automatically copied to your teamspeak3 plugin folder and teamspeak should open. If it successfully built then it should be in Tools > Options > Addons list where it should show up with no red errors - if there is a red error it will not work and something has gone wrong, this is probably a libary linking issue if in the log it says error 126. If you want to distribute the plugin to others just send them the CPP-PAR dll to be put in their %appdata%\TS3Client\plugins folder.
+### Building and using the plugin:
+Building the plugin dll should cause it to be automatically copied to your teamspeak3 plugin folder and teamspeak should open (Teamspeak will need to be closed for this otherwise you'll get a build error). If it successfully built then it should be in Tools > Options > Addons list where it should show up with no red errors - if there is a red error it will not work and something has gone wrong, this is probably a libary linking issue if in the log it says error 126. 
+If you want to distribute the plugin to others just send them the CPP-PAR.dll to be put in their %appdata%\TS3Client\plugins folder - alternatively there is a way of packaging it up so it can be double clicked and installed by Teamspeak automatically (this is how packaged releases will be distributed).
 
 ### Planned for the future:
 
-1.Settings menu in Teamspeak to set the MC server address
+1.Better exception handling, you may encounter occasional crashes
 
-2.Better exception handling, this plugin crashes Teamspeak if it can't find the server
-
-3.Customisability of rolloff curve for distance with in Teamspeak or on the server
