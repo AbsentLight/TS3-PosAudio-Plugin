@@ -220,8 +220,6 @@ void dpar_updateConfigFromChannelDescription(uint64 serverConnectionHandlerID, u
 }
 
 void dpar_update3Dposition(uint64 serverConnectionHandlerID) {
-	printf("DPAR: Update position\n");
-
 	uint64 currentChannelID = dpar_getMyCurrentChannel(serverConnectionHandlerID);
 
 	string localClientUID = dpar_getMyClientUID(serverConnectionHandlerID);
@@ -248,7 +246,10 @@ void dpar_update3Dposition(uint64 serverConnectionHandlerID) {
 	up.y = 1.0f;
 	up.z = 0.0f;
 
-	//While clientidlist[i] not null
+	printf("DPAR: Update position\n");
+
+	//The following resets the clients positions - this is needed for when positional audio is not being used
+	//This is the default even if the later code times out
 	for (int i = 0; clientidlist[i]; ++i) {
 		char* clientUID = NULL;
 		ts3Functions.getClientVariableAsString(serverConnectionHandlerID, clientidlist[i], CLIENT_UNIQUE_IDENTIFIER, &clientUID);
@@ -266,7 +267,6 @@ void dpar_update3Dposition(uint64 serverConnectionHandlerID) {
 		position.z = 0.0f;
 		ts3Functions.channelset3DAttributes(serverConnectionHandlerID, clientidlist[i], &position);
 	}
-	return;
 
 	// Create http_client to send the request.
 	const std::string candidateUri = "http://" + ServerHost + ":" + ServerPort + "";
