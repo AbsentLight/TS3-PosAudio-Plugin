@@ -340,12 +340,12 @@ void dpar_update3Dposition(uint64 serverConnectionHandlerID) {
 					//printf("Setting position for %s to %f, %f, %f\n", clientstr.c_str(), posArray[0].as_double(), posArray[1].as_double(), posArray[2].as_double());
 
 					// Modifier added onto y-pos to simulate channels by placing clients vertically about each other
-					double channel_y_mod = RolloffCutoff * 4 * jsonVal[clientid][L"channel"][L"id"].as_double();
+					double channel_y_mod = RolloffCutoff * 4 * playerData[clientid][L"channel"][L"id"].as_double();
 
-					if (jsonVal[clientid][L"channel"][L"mode"].as_string() == U("local")) {
-						position.x = -1 * jsonVal[clientid][L"pos"][L"x"].as_double();
-						position.y = jsonVal[clientid][L"pos"][L"y"].as_double() + channel_y_mod;
-						position.z = jsonVal[clientid][L"pos"][L"z"].as_double();
+					if (playerData[clientid][L"channel"][L"mode"].as_string() == U("local")) {
+						position.x = -1 * playerData[clientid][L"pos"][L"x"].as_double();
+						position.y = playerData[clientid][L"pos"][L"y"].as_double() + channel_y_mod;
+						position.z = playerData[clientid][L"pos"][L"z"].as_double();
 					}
 					else {
 						position.x = 0.0f;
