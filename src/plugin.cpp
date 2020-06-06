@@ -244,6 +244,12 @@ void dpar_update3Dposition(uint64 serverConnectionHandlerID) {
 	if (clientidlist == NULL) {
 		return;
 	}
+	
+	//If there is only one client in the list then there's no need for positional audio
+	//two clients are the minimum for position to be useful since it's the relative position
+	if (clientidlist[1] == NULL) {
+		return;
+	}
 
 	TS3_VECTOR center;
 	center.x = 0.0f;
